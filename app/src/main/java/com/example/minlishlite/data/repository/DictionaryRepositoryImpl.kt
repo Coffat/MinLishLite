@@ -2,6 +2,7 @@ package com.example.minlishlite.data.repository
 
 import com.example.minlishlite.core.result.NetworkException
 import com.example.minlishlite.core.result.WordNotFoundException
+import com.example.minlishlite.core.util.AppLogger
 import com.example.minlishlite.data.mapper.buildCombinedPronunciation
 import com.example.minlishlite.data.mapper.DictionaryEntryData
 import com.example.minlishlite.data.mapper.EnglishDefinitionLine
@@ -29,6 +30,7 @@ class DictionaryRepositoryImpl(
         try {
             val response = apiService.lookupWord(word.trim())
             if (response.isEmpty()) {
+                AppLogger.d("Dictionary lookup: no entries for '$word'")
                 return@withContext Result.failure(WordNotFoundException())
             }
 
@@ -36,12 +38,20 @@ class DictionaryRepositoryImpl(
             Result.success(entryData.toVietnameseWord())
         } catch (e: HttpException) {
             when (e.code()) {
-                404 -> Result.failure(WordNotFoundException())
-                else -> Result.failure(e)
+                404 -> {
+                    AppLogger.d("Dictionary lookup: HTTP 404 for '$word'")
+                    Result.failure(WordNotFoundException())
+                }
+                else -> {
+                    AppLogger.e("Dictionary lookup: HTTP ${e.code()} for '$word'", e)
+                    Result.failure(e)
+                }
             }
         } catch (e: IOException) {
+            AppLogger.e("Dictionary lookup: network error for '$word'", e)
             Result.failure(NetworkException(e))
         } catch (e: IllegalArgumentException) {
+            AppLogger.d("Dictionary lookup: invalid response for '$word'")
             Result.failure(WordNotFoundException())
         }
     }

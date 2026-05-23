@@ -22,14 +22,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.minlishlite.domain.model.ReviewResult
 import com.example.minlishlite.presentation.component.AppButton
@@ -51,7 +53,7 @@ fun StudyScreen(
     modifier: Modifier = Modifier,
     viewModel: StudyViewModel = viewModel(factory = StudyViewModel.provideFactory(studyMode))
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -77,7 +79,7 @@ fun StudyScreen(
                 onFinish = onBackClick,
                 modifier = Modifier.padding(innerPadding)
             )
-            state.words.isEmpty() -> EmptyState(
+            state.totalCount == 0 -> EmptyState(
                 title = "Không có từ cần ôn",
                 message = "Tất cả từ trong bộ này đã được ôn. Hãy quay lại sau.",
                 icon = Icons.Outlined.MenuBook,
@@ -136,6 +138,9 @@ private fun StudyingContent(
     modifier: Modifier = Modifier
 ) {
     val currentWord = state.currentWord ?: return
+    val showRatingButtons by remember(state.isFlipped, state.isSubmittingRating) {
+        derivedStateOf { state.isFlipped && !state.isSubmittingRating }
+    }
 
     Column(
         modifier = modifier
@@ -176,10 +181,10 @@ private fun StudyingContent(
                 ) {
                     CircularProgressIndicator(color = Primary)
                 }
-            } else {
+            } else if (showRatingButtons) {
                 ReviewRatingButtons(
                     onRate = onRateCard,
-                    enabled = !state.isSubmittingRating,
+                    enabled = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

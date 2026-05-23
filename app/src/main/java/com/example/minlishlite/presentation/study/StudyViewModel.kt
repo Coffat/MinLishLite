@@ -24,21 +24,17 @@ import kotlinx.coroutines.launch
 
 data class StudyUiState(
     val deckName: String = "",
-    val words: List<Word> = emptyList(),
+    val currentWord: Word? = null,
     val currentIndex: Int = 0,
+    val totalCount: Int = 0,
+    val progressLabel: String = "0/0",
+    val progressFraction: Float = 0f,
     val isFlipped: Boolean = false,
     val isLoading: Boolean = true,
     val isSubmittingRating: Boolean = false,
     val errorMessage: String? = null,
     val isSessionComplete: Boolean = false
-) {
-    val currentWord: Word? get() = words.getOrNull(currentIndex)
-    val totalCount: Int get() = words.size
-    val progressLabel: String
-        get() = if (totalCount == 0) "0/0" else "${currentIndex + 1}/$totalCount"
-    val progressFraction: Float
-        get() = if (totalCount == 0) 0f else (currentIndex + 1f) / totalCount
-}
+)
 
 class StudyViewModel(
     private val deckRepository: DeckRepository,
@@ -122,12 +118,16 @@ class StudyViewModel(
         val error = values[7] as String?
 
         val words = sessionWords ?: emptyList()
-        val safeIndex = currentIndex.coerceIn(0, (words.size - 1).coerceAtLeast(0))
+        val totalCount = words.size
+        val safeIndex = currentIndex.coerceIn(0, (totalCount - 1).coerceAtLeast(0))
 
         StudyUiState(
             deckName = deckName,
-            words = words,
+            currentWord = words.getOrNull(safeIndex),
             currentIndex = safeIndex,
+            totalCount = totalCount,
+            progressLabel = if (totalCount == 0) "0/0" else "${safeIndex + 1}/$totalCount",
+            progressFraction = if (totalCount == 0) 0f else (safeIndex + 1f) / totalCount,
             isFlipped = isFlipped,
             isLoading = !deckLoaded || sessionWords == null,
             isSubmittingRating = isSubmittingRating,

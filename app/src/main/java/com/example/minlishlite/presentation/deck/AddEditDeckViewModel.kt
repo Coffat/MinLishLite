@@ -11,6 +11,7 @@ import com.example.minlishlite.domain.repository.DeckRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -77,10 +78,24 @@ class AddEditDeckViewModel(
 
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
+            val trimmedName = state.name.trim()
+            val duplicateExists = deckRepository.observeAllDecks().first().any { existing ->
+                existing.id != deckId && existing.name.equals(trimmedName, ignoreCase = true)
+            }
+            if (duplicateExists) {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        nameError = "Đã tồn tại bộ từ với tên này"
+                    )
+                }
+                return@launch
+            }
+
             val now = System.currentTimeMillis()
             val deck = Deck(
                 id = deckId ?: 0,
-                name = state.name.trim(),
+                name = trimmedName,
                 description = state.description.trim(),
                 tag = state.tag.trim(),
                 createdAt = now,

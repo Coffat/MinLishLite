@@ -1,5 +1,6 @@
 package com.example.minlishlite.data.repository
 
+import com.example.minlishlite.core.util.AppLogger
 import com.example.minlishlite.data.local.dao.ReviewHistoryDao
 import com.example.minlishlite.data.local.dao.WordDao
 import com.example.minlishlite.data.local.entity.ReviewHistoryEntity
@@ -23,29 +24,32 @@ class StudyRepositoryImpl(
     ) {
         val now = System.currentTimeMillis()
         val wordEntity = wordDao.getWordById(wordId)
-        if (wordEntity != null) {
-            val updatedWord = wordEntity.copy(
-                reviewCount = wordEntity.reviewCount + 1,
-                correctCount = if (result != ReviewResult.AGAIN) {
-                    wordEntity.correctCount + 1
-                } else {
-                    wordEntity.correctCount
-                },
-                easeFactor = easeFactor,
-                nextReviewAt = nextReviewAt,
-                lastReviewedAt = now,
-                updatedAt = now
-            )
-            wordDao.updateWord(updatedWord)
-
-            val history = ReviewHistoryEntity(
-                wordId = wordId,
-                deckId = wordEntity.deckId,
-                result = result.name,
-                reviewedAt = now
-            )
-            reviewHistoryDao.insertHistory(history)
+        if (wordEntity == null) {
+            AppLogger.e("reviewWord: word not found for id=$wordId")
+            return
         }
+
+        val updatedWord = wordEntity.copy(
+            reviewCount = wordEntity.reviewCount + 1,
+            correctCount = if (result != ReviewResult.AGAIN) {
+                wordEntity.correctCount + 1
+            } else {
+                wordEntity.correctCount
+            },
+            easeFactor = easeFactor,
+            nextReviewAt = nextReviewAt,
+            lastReviewedAt = now,
+            updatedAt = now
+        )
+        wordDao.updateWord(updatedWord)
+
+        val history = ReviewHistoryEntity(
+            wordId = wordId,
+            deckId = wordEntity.deckId,
+            result = result.name,
+            reviewedAt = now
+        )
+        reviewHistoryDao.insertHistory(history)
     }
 
     override fun observeReviewHistory(): Flow<List<ReviewHistory>> {

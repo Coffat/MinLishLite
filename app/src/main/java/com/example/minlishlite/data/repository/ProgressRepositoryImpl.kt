@@ -1,5 +1,6 @@
 package com.example.minlishlite.data.repository
 
+import com.example.minlishlite.core.util.AppLogger
 import com.example.minlishlite.data.local.dao.ReviewHistoryDao
 import com.example.minlishlite.data.local.dao.WordDao
 import com.example.minlishlite.data.mapper.toDomain
@@ -8,6 +9,7 @@ import com.example.minlishlite.domain.model.ReviewHistory
 import com.example.minlishlite.domain.repository.ProgressRepository
 import com.example.minlishlite.domain.usecase.ProgressCalculator
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
@@ -57,6 +59,9 @@ class ProgressRepositoryImpl(
                 reviewHistory = history,
                 now = currentTime
             )
+        }.catch { throwable ->
+            AppLogger.e("observeProgressAnalytics failed", throwable)
+            throw throwable
         }
     }
 

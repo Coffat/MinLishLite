@@ -34,11 +34,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -72,9 +73,18 @@ fun DeckListScreen(
     modifier: Modifier = Modifier,
     viewModel: DeckListViewModel = viewModel(factory = DeckListViewModel.Factory)
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     var deckToDelete by remember { mutableStateOf<Deck?>(null) }
     val tagScrollState = rememberScrollState()
+    val emptyMessage by remember(state.searchQuery, state.selectedTag) {
+        derivedStateOf {
+            if (state.searchQuery.isNotEmpty() || state.selectedTag != null) {
+                "Không tìm thấy bộ từ vựng nào phù hợp với tìm kiếm."
+            } else {
+                "Bạn chưa tạo bộ từ vựng nào. Hãy nhấn nút + ở góc màn hình để tạo mới!"
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -160,15 +170,10 @@ fun DeckListScreen(
                     LoadingState(modifier = Modifier.weight(1f))
                 }
                 state.decks.isEmpty() -> {
-                    val message = if (state.searchQuery.isNotEmpty() || state.selectedTag != null) {
-                        "Không tìm thấy bộ từ vựng nào phù hợp với tìm kiếm."
-                    } else {
-                        "Bạn chưa tạo bộ từ vựng nào. Hãy nhấn nút + ở góc màn hình để tạo mới!"
-                    }
                     Box(modifier = Modifier.weight(1f)) {
                         EmptyState(
                             title = "Danh sách trống",
-                            message = message,
+                            message = emptyMessage,
                             icon = Icons.Outlined.Inbox
                         )
                     }

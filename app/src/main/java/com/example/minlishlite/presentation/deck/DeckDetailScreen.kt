@@ -36,11 +36,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -84,8 +85,20 @@ fun DeckDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: DeckDetailViewModel = viewModel(factory = DeckDetailViewModel.provideFactory(deckId))
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     var wordToDelete by remember { mutableStateOf<Word?>(null) }
+    val wordListEmptyMessage by remember(state.searchQuery, state.selectedFilter) {
+        derivedStateOf {
+            when {
+                state.searchQuery.isNotEmpty() ->
+                    "Không tìm thấy từ vựng nào khớp với tìm kiếm."
+                state.selectedFilter != WordFilter.ALL ->
+                    "Không có từ vựng nào thuộc bộ lọc này."
+                else ->
+                    "Chưa có từ vựng nào trong bộ từ này. Hãy nhấn nút + ở góc dưới để thêm từ mới đầu tiên!"
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -165,89 +178,13 @@ fun DeckDetailScreen(
                                 .padding(horizontal = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Deck Info Section
                             item {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(
-                                            text = deck.name,
-                                            fontSize = 24.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = OnSurface,
-                                            modifier = Modifier.weight(1f)
-                                        )
-
-                                        if (deck.tag.isNotEmpty()) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(PrimarySoft, RoundedCornerShape(6.dp))
-                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                                            ) {
-                                                Text(
-                                                    text = deck.tag,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Primary
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    if (deck.description.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = deck.description,
-                                            fontSize = 14.sp,
-                                            color = OnSurfaceMuted,
-                                            lineHeight = 20.sp
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Stats Cards Row
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    StatBox(
-                                        label = "Tổng số từ",
-                                        value = state.totalWordsCount.toString(),
-                                        color = OnSurface,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    StatBox(
-                                        label = "Cần ôn",
-                                        value = state.dueWordsCount.toString(),
-                                        color = AccentOrange,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    StatBox(
-                                        label = "Đã học",
-                                        value = state.learnedWordsCount.toString(),
-                                        color = AccentGreen,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
-
-                            // Study Action Button
-                            item {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                AppButton(
-                                    text = "Học ngay (${state.dueWordsCount} từ cần ôn)",
-                                    onClick = { onNavigateToStudy(deckId) },
-                                    icon = Icons.Default.PlayArrow,
-                                    enabled = state.totalWordsCount > 0,
-                                    modifier = Modifier.fillMaxWidth()
+                                DeckSummarySection(
+                                    deck = deck,
+                                    totalWordsCount = state.totalWordsCount,
+                                    dueWordsCount = state.dueWordsCount,
+                                    learnedWordsCount = state.learnedWordsCount,
+                                    onStudyClick = { onNavigateToStudy(deckId) }
                                 )
                             }
 
@@ -309,16 +246,9 @@ fun DeckDetailScreen(
                             // Word List
                             if (state.words.isEmpty()) {
                                 item {
-                                    val message = if (state.searchQuery.isNotEmpty()) {
-                                        "Không tìm thấy từ vựng nào khớp với tìm kiếm."
-                                    } else if (state.selectedFilter != WordFilter.ALL) {
-                                        "Không có từ vựng nào thuộc bộ lọc này."
-                                    } else {
-                                        "Chưa có từ vựng nào trong bộ từ này. Hãy nhấn nút + ở góc dưới để thêm từ mới đầu tiên!"
-                                    }
                                     EmptyState(
                                         title = "Không có từ vựng",
-                                        message = message,
+                                        message = wordListEmptyMessage,
                                         icon = Icons.Outlined.Book
                                     )
                                 }

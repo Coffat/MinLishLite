@@ -17,6 +17,7 @@ import com.example.minlishlite.domain.repository.WordRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -256,6 +257,25 @@ class AddEditWordViewModel(
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
+                val trimmedWord = state.word.trim()
+                val targetDeckId = deckId ?: wordRepository.getWordById(wordId ?: -1)?.deckId
+                if (targetDeckId != null) {
+                    val duplicateExists = wordRepository.observeWordsByDeckId(targetDeckId).first()
+                        .any { existing ->
+                            existing.id != wordId &&
+                                existing.word.equals(trimmedWord, ignoreCase = true)
+                        }
+                    if (duplicateExists) {
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                wordError = "Từ này đã tồn tại trong bộ từ"
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
                 val now = System.currentTimeMillis()
                 val combinedPronunciation = buildCombinedPronunciation(
                     state.pronunciationUk.trim(),
@@ -263,10 +283,10 @@ class AddEditWordViewModel(
                 )
 
                 if (wordId == null) {
-                    val targetDeckId = deckId ?: 0
+                    val resolvedDeckId = deckId ?: 0
                     val newWord = Word(
-                        deckId = targetDeckId,
-                        word = state.word.trim(),
+                        deckId = resolvedDeckId,
+                        word = trimmedWord,
                         pronunciation = combinedPronunciation,
                         pronunciationUk = state.pronunciationUk.trim(),
                         pronunciationUs = state.pronunciationUs.trim(),
@@ -289,7 +309,7 @@ class AddEditWordViewModel(
                     val original = wordRepository.getWordById(wordId)
                     if (original != null) {
                         val updatedWord = original.copy(
-                            word = state.word.trim(),
+                            word = trimmedWord,
                             pronunciation = combinedPronunciation,
                             pronunciationUk = state.pronunciationUk.trim(),
                             pronunciationUs = state.pronunciationUs.trim(),
