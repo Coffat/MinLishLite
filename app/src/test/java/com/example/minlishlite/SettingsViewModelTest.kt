@@ -1,5 +1,6 @@
 package com.example.minlishlite
 
+import com.example.minlishlite.core.notification.StudyReminderScheduler
 import com.example.minlishlite.domain.model.User
 import com.example.minlishlite.domain.repository.SettingsRepository
 import com.example.minlishlite.domain.repository.UserRepository
@@ -27,6 +28,7 @@ class SettingsViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeUserRepository: FakeUserRepository
     private lateinit var fakeSettingsRepository: FakeSettingsRepository
+    private lateinit var fakeScheduler: FakeStudyReminderScheduler
     private lateinit var viewModel: SettingsViewModel
 
     @Before
@@ -34,6 +36,11 @@ class SettingsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         fakeUserRepository = FakeUserRepository()
         fakeSettingsRepository = FakeSettingsRepository()
+        fakeScheduler = FakeStudyReminderScheduler()
+    }
+
+    private fun createViewModel(): SettingsViewModel {
+        return SettingsViewModel(fakeUserRepository, fakeSettingsRepository, fakeScheduler)
     }
 
     @After
@@ -51,7 +58,7 @@ class SettingsViewModelTest {
         fakeSettingsRepository.saveReminderTime("20:30")
 
         // Act
-        viewModel = SettingsViewModel(fakeUserRepository, fakeSettingsRepository)
+        viewModel = createViewModel()
 
         // Assert
         assertEquals(testUser, viewModel.uiState.value.user)
@@ -63,7 +70,7 @@ class SettingsViewModelTest {
     @Test
     fun onNewWordsPerDayChange_updatesSettingsRepository() = runTest {
         // Arrange
-        viewModel = SettingsViewModel(fakeUserRepository, fakeSettingsRepository)
+        viewModel = createViewModel()
 
         // Act
         viewModel.onNewWordsPerDayChange(25)
@@ -75,19 +82,42 @@ class SettingsViewModelTest {
     @Test
     fun onReminderEnabledChange_updatesSettingsRepository() = runTest {
         // Arrange
-        viewModel = SettingsViewModel(fakeUserRepository, fakeSettingsRepository)
+        viewModel = createViewModel()
 
         // Act
         viewModel.onReminderEnabledChange(false)
 
         // Assert
         assertEquals(false, fakeSettingsRepository.observeReminderEnabled().first())
+        assertTrue(fakeScheduler.cancelCalled)
+    }
+
+    @Test
+    fun onReminderEnabledChange_whenEnabled_schedulesReminder() = runTest {
+        viewModel = createViewModel()
+
+        viewModel.onReminderEnabledChange(true)
+
+        assertEquals(true, fakeSettingsRepository.observeReminderEnabled().first())
+        assertEquals("09:00", fakeScheduler.lastScheduledTime)
+    }
+
+    @Test
+    fun onReminderTimeChange_whenEnabled_reschedulesReminder() = runTest {
+        viewModel = createViewModel()
+        viewModel.onReminderEnabledChange(true)
+        fakeScheduler.lastScheduledTime = null
+
+        viewModel.onReminderTimeChange("12:00")
+
+        assertEquals("12:00", fakeSettingsRepository.observeReminderTime().first())
+        assertEquals("12:00", fakeScheduler.lastScheduledTime)
     }
 
     @Test
     fun onReminderTimeChange_updatesSettingsRepository() = runTest {
         // Arrange
-        viewModel = SettingsViewModel(fakeUserRepository, fakeSettingsRepository)
+        viewModel = createViewModel()
 
         // Act
         viewModel.onReminderTimeChange("12:00")
@@ -101,7 +131,7 @@ class SettingsViewModelTest {
         // Arrange
         val testUser = User(1, "Original Name", "test@test.com", "Goal Y", "Advanced", 100L)
         fakeUserRepository.setUser(testUser)
-        viewModel = SettingsViewModel(fakeUserRepository, fakeSettingsRepository)
+        viewModel = createViewModel()
 
         // Act
         viewModel.onShowEditProfile(true)
@@ -119,7 +149,7 @@ class SettingsViewModelTest {
         // Arrange
         val testUser = User(1, "Original Name", "test@test.com", "Goal Y", "Advanced", 100L)
         fakeUserRepository.setUser(testUser)
-        viewModel = SettingsViewModel(fakeUserRepository, fakeSettingsRepository)
+        viewModel = createViewModel()
         viewModel.onShowEditProfile(true)
 
         // Act
@@ -150,6 +180,21 @@ class SettingsViewModelTest {
 
         fun setUser(user: User?) {
             userFlow.value = user
+        }
+    }
+
+    private class FakeStudyReminderScheduler : StudyReminderScheduler {
+        var lastScheduledTime: String? = null
+        var cancelCalled = false
+
+        override fun schedule(reminderTime: String) {
+            lastScheduledTime = reminderTime
+            cancelCalled = false
+        }
+
+        override fun cancel() {
+            cancelCalled = true
+            lastScheduledTime = null
         }
     }
 

@@ -8,11 +8,13 @@ import com.example.minlishlite.data.remote.api.TranslationApiService
 import com.example.minlishlite.data.repository.DeckRepositoryImpl
 import com.example.minlishlite.data.repository.DictionaryRepositoryImpl
 import com.example.minlishlite.data.repository.ProgressRepositoryImpl
+import com.example.minlishlite.core.notification.StudyReminderSchedulerImpl
 import com.example.minlishlite.data.repository.SettingsRepositoryImpl
 import com.example.minlishlite.data.repository.StudyRepositoryImpl
 import com.example.minlishlite.data.repository.TranslationRepositoryImpl
 import com.example.minlishlite.data.repository.UserRepositoryImpl
 import com.example.minlishlite.data.repository.WordRepositoryImpl
+import com.example.minlishlite.core.notification.StudyReminderScheduler
 import com.example.minlishlite.domain.repository.DeckRepository
 import com.example.minlishlite.domain.repository.DictionaryRepository
 import com.example.minlishlite.domain.repository.ProgressRepository
@@ -35,6 +37,7 @@ interface AppContainer {
     val progressRepository: ProgressRepository
     val settingsRepository: SettingsRepository
     val dictionaryRepository: DictionaryRepository
+    val studyReminderScheduler: StudyReminderScheduler
 }
 
 class AppDataContainer(private val context: Context) : AppContainer {
@@ -112,5 +115,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
 
     override val dictionaryRepository: DictionaryRepository by lazy {
         DictionaryRepositoryImpl(dictionaryApiService, translationRepository)
+    }
+
+    override val studyReminderScheduler: StudyReminderScheduler by lazy {
+        StudyReminderSchedulerImpl(context.applicationContext)
     }
 }

@@ -78,6 +78,15 @@ fun HomeScreen(
             )
         }
 
+        if (state.dueTodayCount > 0) {
+            item {
+                StudyReminderBanner(
+                    dueTodayCount = state.dueTodayCount,
+                    onClick = onNavigateToStudyDueToday
+                )
+            }
+        }
+
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),

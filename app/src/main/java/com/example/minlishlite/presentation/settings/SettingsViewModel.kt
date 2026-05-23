@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
+import com.example.minlishlite.core.notification.StudyReminderScheduler
 import com.example.minlishlite.domain.model.User
 import com.example.minlishlite.domain.repository.SettingsRepository
 import com.example.minlishlite.domain.repository.UserRepository
@@ -28,7 +29,8 @@ data class SettingsUiState(
 
 class SettingsViewModel(
     private val userRepository: UserRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val studyReminderScheduler: StudyReminderScheduler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -74,12 +76,20 @@ class SettingsViewModel(
     fun onReminderEnabledChange(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.saveReminderEnabled(enabled)
+            if (enabled) {
+                studyReminderScheduler.schedule(_uiState.value.reminderTime)
+            } else {
+                studyReminderScheduler.cancel()
+            }
         }
     }
 
     fun onReminderTimeChange(time: String) {
         viewModelScope.launch {
             settingsRepository.saveReminderTime(time)
+            if (_uiState.value.reminderEnabled) {
+                studyReminderScheduler.schedule(time)
+            }
         }
     }
 
@@ -128,10 +138,12 @@ class SettingsViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MinLishApplication)
+                val application =
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MinLishApplication
                 SettingsViewModel(
                     userRepository = application.container.userRepository,
-                    settingsRepository = application.container.settingsRepository
+                    settingsRepository = application.container.settingsRepository,
+                    studyReminderScheduler = application.container.studyReminderScheduler
                 )
             }
         }
