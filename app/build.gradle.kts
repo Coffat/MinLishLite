@@ -35,6 +35,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -55,6 +56,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.room.testing)
+
+  // Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    debugImplementation(libs.okhttp.logging)
 
     testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

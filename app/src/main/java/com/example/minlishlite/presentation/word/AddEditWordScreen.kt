@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,16 +29,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.minlishlite.core.util.PronunciationAudioPlayer
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.presentation.component.AppOutlinedButton
 import com.example.minlishlite.presentation.component.AppTextField
@@ -65,6 +69,11 @@ fun AddEditWordScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val isEdit = wordId != null
+    val context = LocalContext.current
+
+    DisposableEffect(Unit) {
+        onDispose { PronunciationAudioPlayer.stop() }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -160,7 +169,7 @@ fun AddEditWordScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 AppOutlinedButton(
-                                    text = if (state.isSearching) "Đang tìm..." else "Tra nghĩa bằng API",
+                                    text = if (state.isSearching) "Đang tìm..." else "Tra nghĩa",
                                     onClick = { viewModel.lookupWordInDictionary() },
                                     icon = Icons.Default.Search,
                                     enabled = state.word.isNotBlank() && !state.isSearching,
@@ -197,15 +206,57 @@ fun AddEditWordScreen(
                                 )
                             }
 
+                            state.lookupPreview?.let { preview ->
+                                Spacer(modifier = Modifier.height(12.dp))
+                                DictionaryLookupPreviewCard(
+                                    preview = preview,
+                                    onApplyClick = { viewModel.applyLookupPreview() },
+                                    onDismissClick = { viewModel.dismissLookupPreview() },
+                                    onPlayUkAudio = {
+                                        PronunciationAudioPlayer.play(context, preview.pronunciationUkAudioUrl)
+                                    },
+                                    onPlayUsAudio = {
+                                        PronunciationAudioPlayer.play(context, preview.pronunciationUsAudioUrl)
+                                    }
+                                )
+                            }
+
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Pronunciation
-                            AppTextField(
-                                value = state.pronunciation,
-                                onValueChange = { viewModel.onPronunciationChange(it) },
-                                label = "Phát âm / Phiên âm",
-                                placeholder = "Ví dụ: /həˈləʊ/",
-                                modifier = Modifier.fillMaxWidth()
+                            Text(
+                                text = "Phát âm / Phiên âm",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = OnSurface,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            val ukAudioUrl = state.lookupPreview?.pronunciationUkAudioUrl
+                                ?.takeIf { it.isNotBlank() }
+                                ?: state.pronunciationUkAudioUrl.takeIf { it.isNotBlank() }
+
+                            PronunciationField(
+                                label = "Anh-Anh (UK)",
+                                value = state.pronunciationUk,
+                                onValueChange = { viewModel.onPronunciationUkChange(it) },
+                                audioUrl = ukAudioUrl,
+                                onPlayAudio = { PronunciationAudioPlayer.play(context, ukAudioUrl.orEmpty()) },
+                                placeholder = "Ví dụ: /həˈləʊ/"
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            val usAudioUrl = state.lookupPreview?.pronunciationUsAudioUrl
+                                ?.takeIf { it.isNotBlank() }
+                                ?: state.pronunciationUsAudioUrl.takeIf { it.isNotBlank() }
+
+                            PronunciationField(
+                                label = "Anh-Mỹ (US)",
+                                value = state.pronunciationUs,
+                                onValueChange = { viewModel.onPronunciationUsChange(it) },
+                                audioUrl = usAudioUrl,
+                                onPlayAudio = { PronunciationAudioPlayer.play(context, usAudioUrl.orEmpty()) },
+                                placeholder = "Ví dụ: /həˈloʊ/"
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -354,6 +405,194 @@ fun AddEditWordScreen(
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PronunciationField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    audioUrl: String?,
+    onPlayAudio: () -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier
+) {
+    AppTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        placeholder = placeholder,
+        trailingIcon = if (audioUrl.isNullOrBlank()) null else Icons.Default.VolumeUp,
+        onTrailingIconClick = if (audioUrl.isNullOrBlank()) null else onPlayAudio,
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun DictionaryLookupPreviewCard(
+    preview: DictionaryLookupPreview,
+    onApplyClick: () -> Unit,
+    onDismissClick: () -> Unit,
+    onPlayUkAudio: () -> Unit,
+    onPlayUsAudio: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Primary.copy(alpha = 0.25f)),
+        colors = CardDefaults.cardColors(containerColor = Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Kết quả tra cứu",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = OnSurface
+            )
+
+            if (preview.meaning.isNotBlank()) {
+                PreviewHighlightBlock(
+                    label = "Nghĩa tiếng Việt",
+                    value = preview.meaning
+                )
+            }
+
+            if (preview.pronunciationUk.isNotBlank() || preview.pronunciationUs.isNotBlank()) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Phát âm",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceMuted
+                    )
+
+                    if (preview.pronunciationUk.isNotBlank()) {
+                        PreviewPronunciationRow(
+                            regionLabel = "Anh-Anh",
+                            phonetic = preview.pronunciationUk,
+                            hasAudio = preview.pronunciationUkAudioUrl.isNotBlank(),
+                            onPlayAudio = onPlayUkAudio
+                        )
+                    }
+
+                    if (preview.pronunciationUs.isNotBlank()) {
+                        PreviewPronunciationRow(
+                            regionLabel = "Anh-Mỹ",
+                            phonetic = preview.pronunciationUs,
+                            hasAudio = preview.pronunciationUsAudioUrl.isNotBlank(),
+                            onPlayAudio = onPlayUsAudio
+                        )
+                    }
+                }
+            }
+
+            if (preview.description.isNotBlank()) {
+                PreviewHighlightBlock(
+                    label = "Định nghĩa",
+                    value = preview.description
+                )
+            }
+
+            if (preview.example.isNotBlank()) {
+                PreviewHighlightBlock(
+                    label = "Ví dụ",
+                    value = preview.example
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AppOutlinedButton(
+                    text = "Bỏ qua",
+                    onClick = onDismissClick,
+                    modifier = Modifier.weight(1f)
+                )
+                AppButton(
+                    text = "Áp dụng",
+                    onClick = onApplyClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreviewHighlightBlock(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Background, RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = OnSurfaceMuted
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            color = OnSurface,
+            lineHeight = 20.sp
+        )
+    }
+}
+
+@Composable
+private fun PreviewPronunciationRow(
+    regionLabel: String,
+    phonetic: String,
+    hasAudio: Boolean,
+    onPlayAudio: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Background, RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = regionLabel,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = OnSurfaceMuted
+            )
+            Text(
+                text = phonetic,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = OnSurface
+            )
+        }
+
+        if (hasAudio) {
+            IconButton(onClick = onPlayAudio) {
+                Icon(
+                    imageVector = Icons.Default.VolumeUp,
+                    contentDescription = "Nghe phát âm $regionLabel",
+                    tint = Primary
+                )
             }
         }
     }

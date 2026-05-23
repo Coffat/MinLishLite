@@ -1,83 +1,105 @@
 package com.example.minlishlite.data.repository
 
+import com.example.minlishlite.core.result.NetworkException
+import com.example.minlishlite.core.result.WordNotFoundException
+import com.example.minlishlite.data.mapper.buildCombinedPronunciation
+import com.example.minlishlite.data.mapper.DictionaryEntryData
+import com.example.minlishlite.data.mapper.EnglishDefinitionLine
+import com.example.minlishlite.data.mapper.toDictionaryEntryData
+import com.example.minlishlite.data.mapper.toVietnamesePartOfSpeech
+import com.example.minlishlite.data.remote.api.DictionaryApiService
 import com.example.minlishlite.domain.model.Word
 import com.example.minlishlite.domain.repository.DictionaryRepository
-import kotlinx.coroutines.delay
+import com.example.minlishlite.domain.repository.TranslationRepository
+import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 
-class DictionaryRepositoryImpl : DictionaryRepository {
-    override suspend fun lookupWord(word: String): Result<Word> {
+class DictionaryRepositoryImpl(
+    private val apiService: DictionaryApiService,
+    private val translationRepository: TranslationRepository
+) : DictionaryRepository {
+
+    override suspend fun lookupWord(word: String): Result<Word> = withContext(Dispatchers.IO) {
         if (word.isBlank()) {
-            return Result.failure(IllegalArgumentException("Word cannot be blank"))
+            return@withContext Result.failure(IllegalArgumentException("Word cannot be blank"))
         }
 
-        // Simulate network delay
-        delay(800)
+        try {
+            val response = apiService.lookupWord(word.trim())
+            if (response.isEmpty()) {
+                return@withContext Result.failure(WordNotFoundException())
+            }
 
-        val normalizedWord = word.trim().lowercase()
+            val entryData = response.first().toDictionaryEntryData(word)
+            Result.success(entryData.toVietnameseWord())
+        } catch (e: HttpException) {
+            when (e.code()) {
+                404 -> Result.failure(WordNotFoundException())
+                else -> Result.failure(e)
+            }
+        } catch (e: IOException) {
+            Result.failure(NetworkException(e))
+        } catch (e: IllegalArgumentException) {
+            Result.failure(WordNotFoundException())
+        }
+    }
 
-        val mockWord = when (normalizedWord) {
-            "hello" -> Word(
-                deckId = 0,
-                word = "hello",
-                pronunciation = "/həˈləʊ/",
-                meaning = "Xin chào",
-                description = "Used as a greeting when you meet somebody.",
-                example = "Hello, how are you?",
-                collocation = "say hello to someone",
-                relatedWords = "hi, hey, greetings",
-                note = "Common greeting",
-                level = "Beginner",
-                nextReviewAt = 0,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
-            )
-            "world" -> Word(
-                deckId = 0,
-                word = "world",
-                pronunciation = "/wɜːld/",
-                meaning = "Thế giới",
-                description = "The earth, together with all of its countries and peoples.",
-                example = "He wants to travel around the world.",
-                collocation = "all over the world",
-                relatedWords = "earth, globe, planet",
-                note = "Common noun",
-                level = "Beginner",
-                nextReviewAt = 0,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
-            )
-            "study" -> Word(
-                deckId = 0,
-                word = "study",
-                pronunciation = "/ˈstʌdi/",
-                meaning = "Học tập, nghiên cứu",
-                description = "The devotion of time and attention to acquiring knowledge.",
-                example = "She needs to study for her exams.",
-                collocation = "study hard, case study",
-                relatedWords = "learn, research, examine",
-                note = "Verb and noun",
-                level = "Beginner",
-                nextReviewAt = 0,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
-            )
-            else -> Word(
-                deckId = 0,
-                word = word.trim(),
-                pronunciation = "/.../",
-                meaning = "Nghĩa của từ '$word' (Tra cứu giả lập)",
-                description = "This is a simulated definition for '$word' from the mock dictionary service.",
-                example = "Example sentence containing '$word'.",
-                collocation = "collocation of '$word'",
-                relatedWords = "related, words",
-                note = "Mocked result",
-                level = "Intermediate",
-                nextReviewAt = 0,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
-            )
+    private suspend fun DictionaryEntryData.toVietnameseWord(): Word {
+        val vietnameseMeaning = translationRepository.translateEnToVi(word)
+            .getOrElse {
+                val fallback = englishDefinitions.firstOrNull()?.text.orEmpty()
+                if (fallback.isNotBlank()) {
+                    translationRepository.translateEnToVi(fallback).getOrDefault(fallback)
+                } else {
+                    word
+                }
+            }
+
+        val vietnameseDescription = buildVietnameseDescription(englishDefinitions)
+
+        return Word(
+            deckId = 0,
+            word = word,
+            pronunciation = buildCombinedPronunciation(pronunciationUk, pronunciationUs),
+            pronunciationUk = pronunciationUk,
+            pronunciationUs = pronunciationUs,
+            pronunciationUkAudioUrl = pronunciationUkAudioUrl,
+            pronunciationUsAudioUrl = pronunciationUsAudioUrl,
+            pronunciationAudioUrl = pronunciationUkAudioUrl,
+            meaning = vietnameseMeaning,
+            description = vietnameseDescription,
+            example = example,
+            collocation = "",
+            relatedWords = relatedWords,
+            note = primaryPartOfSpeech.toVietnamesePartOfSpeech(),
+            level = "Beginner",
+            nextReviewAt = 0,
+            createdAt = 0,
+            updatedAt = 0
+        )
+    }
+
+    private suspend fun buildVietnameseDescription(
+        definitions: List<EnglishDefinitionLine>
+    ): String {
+        if (definitions.isEmpty()) return ""
+
+        val translatedLines = definitions.mapNotNull { line ->
+            val sourceText = line.text.trim()
+            if (sourceText.isEmpty()) return@mapNotNull null
+
+            val translated = translationRepository.translateEnToVi(sourceText).getOrDefault(sourceText)
+            val partOfSpeech = line.partOfSpeech.toVietnamesePartOfSpeech()
+
+            when {
+                definitions.size == 1 -> translated
+                partOfSpeech.isNotBlank() -> "• [$partOfSpeech] $translated"
+                else -> "• $translated"
+            }
         }
 
-        return Result.success(mockWord)
+        return translatedLines.joinToString("\n")
     }
 }
