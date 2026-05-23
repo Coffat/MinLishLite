@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface WordRepository {
     fun observeWordsByDeckId(deckId: Int): Flow<List<Word>>
     fun observeWordsDueToday(currentTime: Long): Flow<List<Word>>
+    fun observeUnreviewedWordsCount(): Flow<Int>
     suspend fun getWordById(id: Int): Word?
     suspend fun insertWord(word: Word): Long
     suspend fun updateWord(word: Word)

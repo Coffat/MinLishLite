@@ -27,8 +27,11 @@ fun BottomNavigationBar(
     val currentRoute = navBackStackEntry?.destination?.route
     android.util.Log.d("NavbarDebug", "currentRoute = $currentRoute")
 
-    // Only hide navbar on Onboarding screen
+    // Hide navbar on focused flows (onboarding, study, review today)
     if (currentRoute == Routes.ONBOARDING) return
+    if (currentRoute?.startsWith("study/") == true) return
+    if (currentRoute == Routes.STUDY_DUE_TODAY) return
+    if (currentRoute == Routes.REVIEW_TODAY) return
 
     val activeRoute = when (currentRoute) {
         Routes.HOME -> Routes.HOME

@@ -337,6 +337,9 @@ class AddEditWordViewModelTest {
         override fun observeWordsDueToday(currentTime: Long): Flow<List<Word>> =
             MutableStateFlow(wordsFlow.value.filter { it.nextReviewAt <= currentTime })
 
+        override fun observeUnreviewedWordsCount(): Flow<Int> =
+            MutableStateFlow(wordsFlow.value.count { it.reviewCount == 0 })
+
         override suspend fun getWordById(id: Int): Word? {
             return wordsFlow.value.find { it.id == id }
         }

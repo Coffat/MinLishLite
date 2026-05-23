@@ -5,6 +5,7 @@ import com.example.minlishlite.data.local.dao.WordDao
 import com.example.minlishlite.data.local.entity.ReviewHistoryEntity
 import com.example.minlishlite.data.mapper.toDomain
 import com.example.minlishlite.domain.model.ReviewHistory
+import com.example.minlishlite.domain.model.ReviewResult
 import com.example.minlishlite.domain.repository.StudyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -14,13 +15,23 @@ class StudyRepositoryImpl(
     private val reviewHistoryDao: ReviewHistoryDao
 ) : StudyRepository {
 
-    override suspend fun reviewWord(wordId: Int, result: String, nextReviewAt: Long) {
+    override suspend fun reviewWord(
+        wordId: Int,
+        result: ReviewResult,
+        nextReviewAt: Long,
+        easeFactor: Float
+    ) {
         val now = System.currentTimeMillis()
         val wordEntity = wordDao.getWordById(wordId)
         if (wordEntity != null) {
             val updatedWord = wordEntity.copy(
                 reviewCount = wordEntity.reviewCount + 1,
-                correctCount = if (result != "AGAIN") wordEntity.correctCount + 1 else wordEntity.correctCount,
+                correctCount = if (result != ReviewResult.AGAIN) {
+                    wordEntity.correctCount + 1
+                } else {
+                    wordEntity.correctCount
+                },
+                easeFactor = easeFactor,
                 nextReviewAt = nextReviewAt,
                 lastReviewedAt = now,
                 updatedAt = now
@@ -30,7 +41,7 @@ class StudyRepositoryImpl(
             val history = ReviewHistoryEntity(
                 wordId = wordId,
                 deckId = wordEntity.deckId,
-                result = result,
+                result = result.name,
                 reviewedAt = now
             )
             reviewHistoryDao.insertHistory(history)

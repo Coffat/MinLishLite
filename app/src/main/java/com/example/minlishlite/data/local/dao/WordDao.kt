@@ -21,6 +21,9 @@ interface WordDao {
     @Query("SELECT COUNT(*) FROM words WHERE nextReviewAt <= :currentTime")
     fun observeWordsDueTodayCount(currentTime: Long): Flow<Int>
 
+    @Query("SELECT COUNT(*) FROM words WHERE reviewCount = 0")
+    fun observeUnreviewedWordsCount(): Flow<Int>
+
     @Query("SELECT * FROM words WHERE id = :id")
     suspend fun getWordById(id: Int): WordEntity?
 

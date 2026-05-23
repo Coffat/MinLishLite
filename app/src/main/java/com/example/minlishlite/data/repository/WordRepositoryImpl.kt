@@ -23,6 +23,10 @@ class WordRepositoryImpl(
         }
     }
 
+    override fun observeUnreviewedWordsCount(): Flow<Int> {
+        return wordDao.observeUnreviewedWordsCount()
+    }
+
     override suspend fun getWordById(id: Int): Word? {
         return wordDao.getWordById(id)?.toDomain()
     }

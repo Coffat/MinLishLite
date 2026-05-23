@@ -13,7 +13,9 @@ import com.example.minlishlite.presentation.deck.DeckListScreen
 import com.example.minlishlite.presentation.home.HomeScreen
 import com.example.minlishlite.presentation.onboarding.OnboardingScreen
 import com.example.minlishlite.presentation.progress.ProgressScreen
+import com.example.minlishlite.presentation.review.ReviewTodayScreen
 import com.example.minlishlite.presentation.settings.SettingsScreen
+import com.example.minlishlite.presentation.study.StudyMode
 import com.example.minlishlite.presentation.study.StudyScreen
 import com.example.minlishlite.presentation.word.AddEditWordScreen
 import com.example.minlishlite.presentation.word.WordDetailScreen
@@ -40,9 +42,34 @@ fun NavGraph(
 
         composable(Routes.HOME) {
             HomeScreen(
-                onNavigateToStudy = { deckId ->
-                    navController.navigate("study/$deckId")
+                onNavigateToStudyDueToday = {
+                    navController.navigate(Routes.STUDY_DUE_TODAY)
+                },
+                onNavigateToReviewToday = {
+                    navController.navigate(Routes.REVIEW_TODAY)
+                },
+                onNavigateToDecks = {
+                    navController.navigate(Routes.DECKS)
+                },
+                onNavigateToDeckDetail = { deckId ->
+                    navController.navigate("deck_detail/$deckId")
                 }
+            )
+        }
+
+        composable(Routes.REVIEW_TODAY) {
+            ReviewTodayScreen(
+                onBackClick = { navController.popBackStack() },
+                onNavigateToStudyDueToday = {
+                    navController.navigate(Routes.STUDY_DUE_TODAY)
+                }
+            )
+        }
+
+        composable(Routes.STUDY_DUE_TODAY) {
+            StudyScreen(
+                studyMode = StudyMode.DueToday,
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -142,7 +169,7 @@ fun NavGraph(
         ) { backStackEntry ->
             val deckId = backStackEntry.arguments?.getInt("deckId") ?: 0
             StudyScreen(
-                deckId = deckId,
+                studyMode = StudyMode.DeckDue(deckId),
                 onBackClick = { navController.popBackStack() }
             )
         }

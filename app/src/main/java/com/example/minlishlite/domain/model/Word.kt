@@ -17,6 +17,7 @@ data class Word(
     val relatedWords: String,
     val note: String,
     val level: String,
+    val easeFactor: Float = 2.5f,
     val nextReviewAt: Long,
     val lastReviewedAt: Long? = null,
     val reviewCount: Int = 0,

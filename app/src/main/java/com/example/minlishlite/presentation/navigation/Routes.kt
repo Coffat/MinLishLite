@@ -11,6 +11,8 @@ object Routes {
     const val EDIT_WORD = "edit_word/{wordId}"
     const val WORD_DETAIL = "word_detail/{wordId}"
     const val STUDY = "study/{deckId}"
+    const val REVIEW_TODAY = "review_today"
+    const val STUDY_DUE_TODAY = "study_due_today"
     const val PROGRESS = "progress"
     const val SETTINGS = "settings"
 }

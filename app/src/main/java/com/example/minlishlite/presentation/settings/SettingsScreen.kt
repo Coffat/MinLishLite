@@ -201,6 +201,13 @@ fun SettingsScreen(
                         thumbColor = Primary
                     )
                 )
+
+                Text(
+                    text = "Home sẽ gợi ý tối đa ${state.newWordsPerDay} từ mới chưa học mỗi ngày.",
+                    fontSize = 12.sp,
+                    color = OnSurfaceMuted,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
 

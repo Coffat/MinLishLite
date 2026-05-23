@@ -109,6 +109,7 @@ class MappersTest {
             relatedWords = "fruit",
             note = "Simple word",
             level = "A1",
+            easeFactor = 2.5f,
             nextReviewAt = 5000L,
             lastReviewedAt = 4000L,
             reviewCount = 5,
@@ -134,6 +135,7 @@ class MappersTest {
         assertEquals(entity.relatedWords, domain.relatedWords)
         assertEquals(entity.note, domain.note)
         assertEquals(entity.level, domain.level)
+        assertEquals(entity.easeFactor, domain.easeFactor, 0.001f)
         assertEquals(entity.nextReviewAt, domain.nextReviewAt)
         assertEquals(entity.lastReviewedAt, domain.lastReviewedAt)
         assertEquals(entity.reviewCount, domain.reviewCount)
@@ -156,6 +158,7 @@ class MappersTest {
             relatedWords = "fruit",
             note = "Simple word",
             level = "A1",
+            easeFactor = 2.5f,
             nextReviewAt = 5000L,
             lastReviewedAt = 4000L,
             reviewCount = 5,
@@ -181,6 +184,7 @@ class MappersTest {
         assertEquals(domain.relatedWords, entity.relatedWords)
         assertEquals(domain.note, entity.note)
         assertEquals(domain.level, entity.level)
+        assertEquals(domain.easeFactor, entity.easeFactor, 0.001f)
         assertEquals(domain.nextReviewAt, entity.nextReviewAt)
         assertEquals(domain.lastReviewedAt, entity.lastReviewedAt)
         assertEquals(domain.reviewCount, entity.reviewCount)
