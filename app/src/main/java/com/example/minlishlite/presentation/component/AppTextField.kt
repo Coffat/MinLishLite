@@ -61,7 +61,7 @@ fun AppTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(if (singleLine) 56.dp else 120.dp),
             enabled = enabled,
             singleLine = singleLine,
             placeholder = placeholder?.let {
