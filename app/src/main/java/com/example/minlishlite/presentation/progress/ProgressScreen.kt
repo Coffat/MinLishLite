@@ -2,45 +2,189 @@ package com.example.minlishlite.presentation.progress
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.minlishlite.domain.model.Achievement
+import com.example.minlishlite.domain.model.DayActivity
+import com.example.minlishlite.domain.model.ProgressAnalytics
+import com.example.minlishlite.domain.usecase.ProgressCalculator
+import com.example.minlishlite.presentation.component.EmptyState
+import com.example.minlishlite.presentation.component.ErrorState
+import com.example.minlishlite.presentation.component.LoadingState
+import com.example.minlishlite.presentation.component.SectionHeader
+import com.example.minlishlite.presentation.deck.StatBox
+import com.example.minlishlite.ui.theme.AccentGreen
+import com.example.minlishlite.ui.theme.AccentOrange
 import com.example.minlishlite.ui.theme.MinLishLiteTheme
 import com.example.minlishlite.ui.theme.OnSurface
+import com.example.minlishlite.ui.theme.OnSurfaceMuted
+import com.example.minlishlite.ui.theme.Primary
 
 @Composable
 fun ProgressScreen(
+    modifier: Modifier = Modifier,
+    viewModel: ProgressViewModel = viewModel(factory = ProgressViewModel.provideFactory())
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    when {
+        state.isLoading -> LoadingState(modifier = modifier.fillMaxSize())
+        state.errorMessage != null -> ErrorState(
+            message = state.errorMessage ?: "Không thể tải tiến độ",
+            onRetryClick = {},
+            modifier = modifier.fillMaxSize()
+        )
+        state.analytics != null -> ProgressContent(
+            analytics = state.analytics!!,
+            modifier = modifier
+        )
+        else -> EmptyState(
+            title = "Chưa có dữ liệu",
+            message = "Hãy học vài từ để xem thống kê tiến độ.",
+            icon = Icons.Outlined.BarChart,
+            modifier = modifier.fillMaxSize()
+        )
+    }
+}
+
+@Composable
+private fun ProgressContent(
+    analytics: ProgressAnalytics,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    val hasReviews = analytics.weeklyActivity.any { it.reviewCount > 0 } ||
+        analytics.wordsLearned > 0
+
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Progress Screen",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = OnSurface
-        )
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Tiến độ học",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = OnSurface
+            )
+            Text(
+                text = "${analytics.totalWords} từ trong thư viện",
+                fontSize = 14.sp,
+                color = OnSurfaceMuted,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                StatBox(
+                    label = "Đã học",
+                    value = analytics.wordsLearned.toString(),
+                    color = AccentGreen,
+                    modifier = Modifier.weight(1f)
+                )
+                StatBox(
+                    label = "Cần ôn",
+                    value = analytics.dueToday.toString(),
+                    color = if (analytics.dueToday > 0) AccentOrange else OnSurfaceMuted,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
-        Text(
-            text = "Route: progress",
-            fontSize = 14.sp
-        )
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                StatBox(
+                    label = "Độ chính xác",
+                    value = "${analytics.accuracyPercent}%",
+                    color = AccentGreen,
+                    modifier = Modifier.weight(1f)
+                )
+                StatBox(
+                    label = "Streak",
+                    value = "${analytics.streakDays} ngày",
+                    color = Primary,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        item {
+            WeeklyActivityChart(weeklyActivity = analytics.weeklyActivity)
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                RetentionRateCard(
+                    retentionPercent = analytics.retentionPercent,
+                    modifier = Modifier.weight(1f)
+                )
+                LevelEstimateCard(
+                    levelLabel = analytics.levelLabel,
+                    wordsLearned = analytics.wordsLearned,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        item {
+            SectionHeader(title = "Thành tựu gần đây")
+        }
+
+        item {
+            if (analytics.achievements.isEmpty()) {
+                Text(
+                    text = "Chưa có thành tựu.",
+                    fontSize = 14.sp,
+                    color = OnSurfaceMuted
+                )
+            } else {
+                AchievementsList(achievements = analytics.achievements)
+            }
+        }
+
+        if (!hasReviews) {
+            item {
+                Text(
+                    text = "Bắt đầu ôn tập để xem biểu đồ và thành tựu cập nhật.",
+                    fontSize = 13.sp,
+                    color = OnSurfaceMuted,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+        } else {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }
 
@@ -48,6 +192,30 @@ fun ProgressScreen(
 @Composable
 fun ProgressScreenPreview() {
     MinLishLiteTheme {
-        ProgressScreen()
+        ProgressContent(
+            analytics = ProgressAnalytics(
+                totalWords = 50,
+                wordsLearned = 32,
+                dueToday = 5,
+                accuracyPercent = 82,
+                streakDays = 3,
+                retentionPercent = 75,
+                levelLabel = ProgressCalculator.LEVEL_BEGINNER,
+                weeklyActivity = listOf(
+                    DayActivity("T2", 2),
+                    DayActivity("T3", 4),
+                    DayActivity("T4", 0),
+                    DayActivity("T5", 3),
+                    DayActivity("T6", 1),
+                    DayActivity("T7", 2),
+                    DayActivity("CN", 5)
+                ),
+                achievements = listOf(
+                    Achievement("Bắt đầu hành trình", "Hoàn thành lần ôn đầu", true),
+                    Achievement("Tuần đều đặn", "Streak 7 ngày", false)
+                )
+            ),
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }

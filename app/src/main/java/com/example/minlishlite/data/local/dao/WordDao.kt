@@ -24,6 +24,15 @@ interface WordDao {
     @Query("SELECT COUNT(*) FROM words WHERE reviewCount = 0")
     fun observeUnreviewedWordsCount(): Flow<Int>
 
+    @Query("SELECT COUNT(*) FROM words")
+    fun observeTotalWordCount(): Flow<Int>
+
+    @Query("SELECT COALESCE(SUM(correctCount), 0) FROM words WHERE reviewCount > 0")
+    fun observeTotalCorrectCount(): Flow<Int>
+
+    @Query("SELECT COALESCE(SUM(reviewCount), 0) FROM words WHERE reviewCount > 0")
+    fun observeTotalReviewCount(): Flow<Int>
+
     @Query("SELECT * FROM words WHERE id = :id")
     suspend fun getWordById(id: Int): WordEntity?
 

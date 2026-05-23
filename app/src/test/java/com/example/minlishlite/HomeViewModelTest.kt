@@ -128,6 +128,21 @@ class HomeViewModelTest {
             dueCountFlow ?: flowOf(dueCount)
 
         override fun observeReviewHistory(): Flow<List<ReviewHistory>> = flowOf(emptyList())
+
+        override fun observeProgressAnalytics(currentTime: Long) =
+            flowOf(
+                com.example.minlishlite.domain.model.ProgressAnalytics(
+                    totalWords = 0,
+                    wordsLearned = 5,
+                    dueToday = dueCount,
+                    accuracyPercent = 0,
+                    streakDays = 0,
+                    retentionPercent = 0,
+                    levelLabel = com.example.minlishlite.domain.usecase.ProgressCalculator.LEVEL_BEGINNER,
+                    weeklyActivity = emptyList(),
+                    achievements = emptyList()
+                )
+            )
     }
 
     private class FakeWordRepository(
