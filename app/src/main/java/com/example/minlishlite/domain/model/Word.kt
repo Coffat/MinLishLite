@@ -1,0 +1,21 @@
+package com.example.minlishlite.domain.model
+
+data class Word(
+    val id: Int = 0,
+    val deckId: Int,
+    val word: String,
+    val pronunciation: String,
+    val meaning: String,
+    val description: String,
+    val example: String,
+    val collocation: String,
+    val relatedWords: String,
+    val note: String,
+    val level: String,
+    val nextReviewAt: Long,
+    val lastReviewedAt: Long? = null,
+    val reviewCount: Int = 0,
+    val correctCount: Int = 0,
+    val createdAt: Long,
+    val updatedAt: Long
+)
