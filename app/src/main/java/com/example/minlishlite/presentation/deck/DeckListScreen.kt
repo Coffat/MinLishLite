@@ -31,7 +31,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -86,45 +85,24 @@ fun DeckListScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToAddDeck,
-                containerColor = Primary,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Thêm bộ từ mới",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        },
-        containerColor = Background
-    ) { innerPadding ->
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Background)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Bộ từ vựng",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurface
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Bộ từ vựng",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = OnSurface
+            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Search Bar
             AppTextField(
@@ -197,6 +175,22 @@ fun DeckListScreen(
                     }
                 }
             }
+        }
+
+        FloatingActionButton(
+            onClick = onNavigateToAddDeck,
+            containerColor = Primary,
+            contentColor = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Thêm bộ từ mới",
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 

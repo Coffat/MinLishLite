@@ -105,16 +105,16 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(Background)
             .verticalScroll(scrollState)
-            .padding(16.dp)
+            .padding(horizontal = 20.dp)
     ) {
-        // Screen Title
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Cài đặt hệ thống",
-            fontSize = 28.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurface,
-            modifier = Modifier.padding(bottom = 20.dp, top = 8.dp)
+            color = OnSurface
         )
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Profile Section
         Text(
