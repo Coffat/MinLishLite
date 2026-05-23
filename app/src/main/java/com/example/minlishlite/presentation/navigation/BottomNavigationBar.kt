@@ -25,10 +25,17 @@ fun BottomNavigationBar(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    android.util.Log.d("NavbarDebug", "currentRoute = $currentRoute")
 
-    // Check if bottom bar should be visible on this screen
-    val topLevelRoutes = NavigationDestination.bottomBarDestinations.map { it.route }
-    if (currentRoute !in topLevelRoutes) return
+    // Only hide navbar on Onboarding screen
+    if (currentRoute == Routes.ONBOARDING) return
+
+    val activeRoute = when (currentRoute) {
+        Routes.HOME -> Routes.HOME
+        Routes.PROGRESS -> Routes.PROGRESS
+        Routes.SETTINGS -> Routes.SETTINGS
+        else -> Routes.DECKS
+    }
 
     NavigationBar(
         modifier = modifier,
@@ -37,7 +44,7 @@ fun BottomNavigationBar(
         windowInsets = WindowInsets(0, 0, 0, 0)
     ) {
         NavigationDestination.bottomBarDestinations.forEach { destination ->
-            val isSelected = currentRoute == destination.route
+            val isSelected = activeRoute == destination.route
 
             NavigationBarItem(
                 selected = isSelected,
