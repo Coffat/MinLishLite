@@ -61,9 +61,5 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     debugImplementation(libs.okhttp.logging)
-
     debugImplementation(libs.androidx.compose.ui.tooling)
-
-    // Testing
-    testImplementation(libs.junit)
 }
