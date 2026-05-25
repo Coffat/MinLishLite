@@ -26,10 +26,16 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -87,6 +93,70 @@ fun DeckDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var wordToDelete by remember { mutableStateOf<WordEntity?>(null) }
+    
+    val context = LocalContext.current
+    var isMenuExpanded by remember { mutableStateOf(false) }
+
+    var showImportSuccessDialog by remember { mutableStateOf(false) }
+    var importMessage by remember { mutableStateOf("") }
+    var showImportErrorDialog by remember { mutableStateOf(false) }
+    var importErrorMessage by remember { mutableStateOf("") }
+
+    var showExportSuccessDialog by remember { mutableStateOf(false) }
+    var exportMessage by remember { mutableStateOf("") }
+    var showExportErrorDialog by remember { mutableStateOf(false) }
+    var exportErrorMessage by remember { mutableStateOf("") }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            try {
+                context.contentResolver.openInputStream(it)?.use { inputStream ->
+                    val csvContent = inputStream.bufferedReader().use { reader -> reader.readText() }
+                    viewModel.importCsv(
+                        csvContent = csvContent,
+                        onSuccess = { count ->
+                            importMessage = "Đã nhập thành công $count từ vựng từ file CSV!"
+                            showImportSuccessDialog = true
+                        },
+                        onError = { error ->
+                            importErrorMessage = error
+                            showImportErrorDialog = true
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                importErrorMessage = "Không thể đọc file: ${e.localizedMessage}"
+                showImportErrorDialog = true
+            }
+        }
+    }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/comma-separated-values")
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            try {
+                viewModel.exportCsv(
+                    onSuccess = { csvContent ->
+                        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                            outputStream.write(csvContent.toByteArray())
+                        }
+                        exportMessage = "Đã xuất từ vựng thành công!"
+                        showExportSuccessDialog = true
+                    },
+                    onError = { error ->
+                        exportErrorMessage = error
+                        showExportErrorDialog = true
+                    }
+                )
+            } catch (e: Exception) {
+                exportErrorMessage = "Không thể ghi file: ${e.localizedMessage}"
+                showExportErrorDialog = true
+            }
+        }
+    }
     val wordListEmptyMessage by remember(state.searchQuery, state.selectedFilter) {
         derivedStateOf {
             when {
@@ -146,15 +216,50 @@ fun DeckDetailScreen(
                     color = OnSurface
                 )
 
-                IconButton(
-                    onClick = { onNavigateToEditDeck(deckId) },
-                    enabled = state.deck != null
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Sửa bộ từ",
-                        tint = Primary
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { onNavigateToEditDeck(deckId) },
+                        enabled = state.deck != null
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Sửa bộ từ",
+                            tint = Primary
+                        )
+                    }
+
+                    Box {
+                        IconButton(
+                            onClick = { isMenuExpanded = true },
+                            enabled = state.deck != null
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Tùy chọn khác",
+                                tint = OnSurface
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = isMenuExpanded,
+                            onDismissRequest = { isMenuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Nhập từ file CSV") },
+                                onClick = {
+                                    isMenuExpanded = false
+                                    importLauncher.launch("*/*")
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Xuất từ file CSV") },
+                                onClick = {
+                                    isMenuExpanded = false
+                                    exportLauncher.launch("minlish_deck_${deckId}.csv")
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -309,6 +414,74 @@ fun DeckDetailScreen(
                     color = OnSurfaceMuted
                 )
             },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
+
+    if (showImportSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportSuccessDialog = false },
+            confirmButton = {
+                AppButton(
+                    text = "OK",
+                    onClick = { showImportSuccessDialog = false },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            },
+            title = { Text(text = "Nhập dữ liệu thành công", fontWeight = FontWeight.Bold) },
+            text = { Text(text = importMessage) },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
+
+    if (showImportErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportErrorDialog = false },
+            confirmButton = {
+                AppButton(
+                    text = "Đóng",
+                    onClick = { showImportErrorDialog = false },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            },
+            title = { Text(text = "Lỗi nhập dữ liệu", fontWeight = FontWeight.Bold, color = ErrorColor) },
+            text = { Text(text = importErrorMessage) },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
+
+    if (showExportSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportSuccessDialog = false },
+            confirmButton = {
+                AppButton(
+                    text = "OK",
+                    onClick = { showExportSuccessDialog = false },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            },
+            title = { Text(text = "Xuất dữ liệu thành công", fontWeight = FontWeight.Bold) },
+            text = { Text(text = exportMessage) },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
+
+    if (showExportErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportErrorDialog = false },
+            confirmButton = {
+                AppButton(
+                    text = "Đóng",
+                    onClick = { showExportErrorDialog = false },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            },
+            title = { Text(text = "Lỗi xuất dữ liệu", fontWeight = FontWeight.Bold, color = ErrorColor) },
+            text = { Text(text = exportErrorMessage) },
             shape = RoundedCornerShape(20.dp),
             containerColor = Color.White
         )

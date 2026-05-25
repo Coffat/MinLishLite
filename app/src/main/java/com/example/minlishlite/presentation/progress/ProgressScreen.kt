@@ -135,7 +135,39 @@ private fun ProgressContent(
         }
 
         item {
-            WeeklyActivityChart(weeklyActivity = analytics.weeklyActivity)
+            // Simple text display of weekly activity instead of custom charts
+            androidx.compose.material3.Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.CardDefaults.cardColors(
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Số từ ôn tập trong tuần",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        analytics.weeklyActivity.forEach { activity ->
+                            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                                Text(text = activity.label, fontSize = 12.sp, color = OnSurfaceMuted)
+                                Text(
+                                    text = activity.reviewCount.toString(),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (activity.reviewCount > 0) AccentGreen else OnSurfaceMuted
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         item {
@@ -143,13 +175,16 @@ private fun ProgressContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                RetentionRateCard(
-                    retentionPercent = analytics.retentionPercent,
+                StatBox(
+                    label = "Tỷ lệ nhớ từ",
+                    value = "${analytics.retentionPercent}%",
+                    color = AccentGreen,
                     modifier = Modifier.weight(1f)
                 )
-                LevelEstimateCard(
-                    levelLabel = analytics.levelLabel,
-                    wordsLearned = analytics.wordsLearned,
+                StatBox(
+                    label = "Trình độ ước lượng",
+                    value = analytics.levelLabel,
+                    color = Primary,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -167,7 +202,46 @@ private fun ProgressContent(
                     color = OnSurfaceMuted
                 )
             } else {
-                AchievementsList(achievements = analytics.achievements)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    analytics.achievements.forEach { achievement ->
+                        androidx.compose.material3.Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = androidx.compose.material3.CardDefaults.cardColors(
+                                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (achievement.unlocked) AccentGreen.copy(alpha = 0.5f) else OnSurfaceMuted.copy(alpha = 0.2f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (achievement.unlocked) "🏆" else "🔒",
+                                    fontSize = 20.sp
+                                )
+                                Column {
+                                    Text(
+                                        text = achievement.title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (achievement.unlocked) OnSurface else OnSurfaceMuted
+                                    )
+                                    Text(
+                                        text = achievement.description,
+                                        fontSize = 12.sp,
+                                        color = OnSurfaceMuted
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

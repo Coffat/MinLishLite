@@ -11,6 +11,10 @@ class WordRepository(
         return wordDao.observeWordsByDeckId(deckId)
     }
 
+    suspend fun getWordsByDeckIdDirect(deckId: Int): List<WordEntity> {
+        return wordDao.getWordsByDeckIdDirect(deckId)
+    }
+
     fun observeWordsDueToday(currentTime: Long): Flow<List<WordEntity>> {
         return wordDao.observeWordsDueToday(currentTime)
     }

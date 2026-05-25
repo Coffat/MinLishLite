@@ -12,6 +12,9 @@ interface WordDao {
     @Query("SELECT * FROM words WHERE deckId = :deckId ORDER BY word ASC")
     fun observeWordsByDeckId(deckId: Int): Flow<List<WordEntity>>
 
+    @Query("SELECT * FROM words WHERE deckId = :deckId ORDER BY word ASC")
+    suspend fun getWordsByDeckIdDirect(deckId: Int): List<WordEntity>
+
     @Query("SELECT * FROM words WHERE nextReviewAt <= :currentTime ORDER BY nextReviewAt ASC")
     fun observeWordsDueToday(currentTime: Long): Flow<List<WordEntity>>
 

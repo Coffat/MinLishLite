@@ -143,6 +143,42 @@ class DeckDetailViewModel(
         }
     }
 
+    fun importCsv(csvContent: String, onSuccess: (Int) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val words = com.example.minlishlite.core.util.CsvHelper.parseCsv(csvContent, deckId)
+                if (words.isEmpty()) {
+                    onError("Không tìm thấy từ vựng hợp lệ để nhập.")
+                    return@launch
+                }
+                words.forEach { word ->
+                    wordRepository.insertWord(word)
+                }
+                onSuccess(words.size)
+            } catch (e: Exception) {
+                onError("Lỗi khi nhập dữ liệu: ${e.localizedMessage}")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun exportCsv(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val words = wordRepository.getWordsByDeckIdDirect(deckId)
+                val csvContent = com.example.minlishlite.core.util.CsvHelper.exportToCsv(words)
+                onSuccess(csvContent)
+            } catch (e: Exception) {
+                onError("Lỗi khi xuất dữ liệu: ${e.localizedMessage}")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     companion object {
         fun provideFactory(deckId: Int): ViewModelProvider.Factory = viewModelFactory {
             initializer {
