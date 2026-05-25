@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.ProgressAnalytics
-import com.example.minlishlite.domain.repository.ProgressRepository
+import com.example.minlishlite.data.model.ProgressAnalytics
+import com.example.minlishlite.data.repository.ProgressRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch

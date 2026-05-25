@@ -6,12 +6,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.ReviewResult
-import com.example.minlishlite.domain.model.Word
-import com.example.minlishlite.domain.repository.DeckRepository
-import com.example.minlishlite.domain.repository.StudyRepository
-import com.example.minlishlite.domain.repository.WordRepository
-import com.example.minlishlite.domain.usecase.SrsCalculator
+import com.example.minlishlite.data.model.ReviewResult
+import com.example.minlishlite.data.local.entity.WordEntity
+import com.example.minlishlite.data.repository.DeckRepository
+import com.example.minlishlite.data.repository.StudyRepository
+import com.example.minlishlite.data.repository.WordRepository
+import com.example.minlishlite.core.util.SrsCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 data class StudyUiState(
     val deckName: String = "",
-    val currentWord: Word? = null,
+    val currentWord: WordEntity? = null,
     val currentIndex: Int = 0,
     val totalCount: Int = 0,
     val progressLabel: String = "0/0",
@@ -44,7 +44,7 @@ class StudyViewModel(
 ) : ViewModel() {
 
     private val _deckName = MutableStateFlow("")
-    private val _sessionWords = MutableStateFlow<List<Word>?>(null)
+    private val _sessionWords = MutableStateFlow<List<WordEntity>?>(null)
     private val _currentIndex = MutableStateFlow(0)
     private val _isFlipped = MutableStateFlow(false)
     private val _isSessionComplete = MutableStateFlow(false)
@@ -52,7 +52,7 @@ class StudyViewModel(
     private val _deckLoaded = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
 
-    private val dueWordsFlow: Flow<List<Word>> = when (studyMode) {
+    private val dueWordsFlow: Flow<List<WordEntity>> = when (studyMode) {
         is StudyMode.DeckDue -> wordRepository.observeWordsByDeckId(studyMode.deckId).map { words ->
             val now = System.currentTimeMillis()
             words
@@ -109,7 +109,7 @@ class StudyViewModel(
     ) { values ->
         val deckName = values[0] as String
         @Suppress("UNCHECKED_CAST")
-        val sessionWords = values[1] as List<Word>?
+        val sessionWords = values[1] as List<WordEntity>?
         val currentIndex = values[2] as Int
         val isFlipped = values[3] as Boolean
         val isSessionComplete = values[4] as Boolean

@@ -6,20 +6,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.Deck
-import com.example.minlishlite.domain.model.User
-import com.example.minlishlite.domain.model.Word
-import com.example.minlishlite.domain.repository.DeckRepository
-import com.example.minlishlite.domain.repository.ProgressRepository
-import com.example.minlishlite.domain.repository.SettingsRepository
-import com.example.minlishlite.domain.repository.UserRepository
-import com.example.minlishlite.domain.repository.WordRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.SharingStarted
+import com.example.minlishlite.data.local.entity.DeckEntity
+import com.example.minlishlite.data.local.entity.WordEntity
+import com.example.minlishlite.data.repository.DeckRepository
+import com.example.minlishlite.data.repository.ProgressRepository
+import com.example.minlishlite.data.repository.SettingsRepository
+import com.example.minlishlite.data.repository.UserRepository
+import com.example.minlishlite.data.repository.WordRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.math.min
 
 data class DueWordItem(
@@ -46,15 +44,6 @@ data class HomeUiState(
     val isLoading: Boolean = true
 )
 
-private data class HomeBaseData(
-    val user: User?,
-    val newWordsPerDay: Int,
-    val unreviewedCount: Int,
-    val wordsLearned: Int,
-    val decks: List<Deck>
-)
-
-@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
     private val userRepository: UserRepository,
     private val settingsRepository: SettingsRepository,
@@ -63,44 +52,103 @@ class HomeViewModel(
     private val deckRepository: DeckRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<HomeUiState> = combine(
-        userRepository.observeUser(),
-        settingsRepository.observeNewWordsPerDay(),
-        wordRepository.observeUnreviewedWordsCount(),
-        progressRepository.observeTotalWordsLearned(),
-        deckRepository.observeAllDecks()
-    ) { user, newWordsPerDay, unreviewedCount, wordsLearned, decks ->
-        HomeBaseData(user, newWordsPerDay, unreviewedCount, wordsLearned, decks)
-    }.flatMapLatest { base ->
-        val now = System.currentTimeMillis()
-        combine(
-            wordRepository.observeWordsDueToday(now),
-            progressRepository.observeDueTodayCount(now)
-        ) { dueWords, dueCount ->
-            val deckNameById = base.decks.associate { it.id to it.name }
-            HomeUiState(
-                userName = base.user?.name?.takeIf { it.isNotBlank() } ?: "bạn",
-                dueTodayCount = dueCount,
-                newWordsSuggested = min(base.unreviewedCount, base.newWordsPerDay),
-                newWordsPerDay = base.newWordsPerDay,
-                wordsLearned = base.wordsLearned,
-                dueWordsPreview = dueWords.take(5).map { word ->
+    private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    private var _unreviewedCount: Int = 0
+    private var _decks: List<DeckEntity> = emptyList()
+    private var _dueWordsList: List<WordEntity> = emptyList()
+
+    init {
+        loadHomeData()
+    }
+
+    fun loadHomeData() {
+        _uiState.update { it.copy(isLoading = true) }
+        
+        viewModelScope.launch {
+            // Collect all required data sequentially or via flow collections
+            launch {
+                userRepository.observeUser().collect { user ->
+                    _uiState.update { it.copy(userName = user?.name?.takeIf { name -> name.isNotBlank() } ?: "bạn") }
+                }
+            }
+
+            launch {
+                settingsRepository.observeNewWordsPerDay().collect { newWordsPerDay ->
+                    _uiState.update { it.copy(newWordsPerDay = newWordsPerDay) }
+                    updateSuggestedWords()
+                }
+            }
+
+            launch {
+                wordRepository.observeUnreviewedWordsCount().collect { unreviewedCount ->
+                    _unreviewedCount = unreviewedCount
+                    updateSuggestedWords()
+                }
+            }
+
+            launch {
+                progressRepository.observeTotalWordsLearned().collect { wordsLearned ->
+                    _uiState.update { it.copy(wordsLearned = wordsLearned) }
+                }
+            }
+
+            launch {
+                deckRepository.observeAllDecks().collect { decks ->
+                    _decks = decks
+                    _uiState.update { state ->
+                        state.copy(
+                            deckPreviews = decks.take(3).map { DeckPreview(it.id, it.name, it.tag) }
+                        )
+                    }
+                    updateDueWordsPreview()
+                }
+            }
+
+            launch {
+                val now = System.currentTimeMillis()
+                wordRepository.observeWordsDueToday(now).collect { dueWords ->
+                    _dueWordsList = dueWords
+                    updateDueWordsPreview()
+                }
+            }
+
+            launch {
+                val now = System.currentTimeMillis()
+                progressRepository.observeDueTodayCount(now).collect { dueCount ->
+                    _uiState.update { it.copy(dueTodayCount = dueCount) }
+                }
+            }
+
+            // Once launch registers collection, we can toggle off initial loading state
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private fun updateSuggestedWords() {
+        _uiState.update { state ->
+            state.copy(
+                newWordsSuggested = min(_unreviewedCount, state.newWordsPerDay)
+            )
+        }
+    }
+
+    private fun updateDueWordsPreview() {
+        val deckNameById = _decks.associate { it.id to it.name }
+        _uiState.update { state ->
+            state.copy(
+                dueWordsPreview = _dueWordsList.take(5).map { word ->
                     DueWordItem(
                         wordId = word.id,
                         word = word.word,
                         meaning = word.meaning,
                         deckName = deckNameById[word.deckId] ?: "Bộ từ"
                     )
-                },
-                deckPreviews = base.decks.take(3).map { DeckPreview(it.id, it.name, it.tag) },
-                isLoading = false
+                }
             )
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HomeUiState(isLoading = true)
-    )
+    }
 
     companion object {
         fun provideFactory(): ViewModelProvider.Factory = viewModelFactory {

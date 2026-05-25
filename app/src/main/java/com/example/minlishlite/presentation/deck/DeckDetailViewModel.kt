@@ -6,10 +6,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.Deck
-import com.example.minlishlite.domain.model.Word
-import com.example.minlishlite.domain.repository.DeckRepository
-import com.example.minlishlite.domain.repository.WordRepository
+import com.example.minlishlite.data.local.entity.DeckEntity
+import com.example.minlishlite.data.local.entity.WordEntity
+import com.example.minlishlite.data.repository.DeckRepository
+import com.example.minlishlite.data.repository.WordRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +24,8 @@ enum class WordFilter {
 }
 
 data class DeckDetailUiState(
-    val deck: Deck? = null,
-    val words: List<Word> = emptyList(),
+    val deck: DeckEntity? = null,
+    val words: List<WordEntity> = emptyList(),
     val totalWordsCount: Int = 0,
     val dueWordsCount: Int = 0,
     val learnedWordsCount: Int = 0,
@@ -47,7 +47,7 @@ class DeckDetailViewModel(
     private val _error = MutableStateFlow<String?>(null)
 
     // Flow for the deck details
-    private val _deckFlow = MutableStateFlow<Deck?>(null)
+    private val _deckFlow = MutableStateFlow<DeckEntity?>(null)
 
     init {
         loadDeckDetails()
@@ -79,9 +79,9 @@ class DeckDetailViewModel(
         _isLoading,
         _error
     ) { flowsArray ->
-        val deck = flowsArray[0] as Deck?
+        val deck = flowsArray[0] as DeckEntity?
         @Suppress("UNCHECKED_CAST")
-        val allWords = flowsArray[1] as List<Word>
+        val allWords = flowsArray[1] as List<WordEntity>
         val query = flowsArray[2] as String
         val filter = flowsArray[3] as WordFilter
         val loading = flowsArray[4] as Boolean

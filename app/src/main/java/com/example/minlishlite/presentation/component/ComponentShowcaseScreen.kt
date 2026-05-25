@@ -63,7 +63,7 @@ fun ComponentShowcaseScreen(
                 title = "No Decks Available",
                 message = "Create your first vocabulary deck to start learning with flashcards and spaced repetition.",
                 icon = Icons.Outlined.Inbox,
-                actionText = "Create Deck",
+                actionText = "Create DeckEntity",
                 onActionClick = { selectedTab = 0 }
             )
             2 -> LoadingState()
@@ -155,7 +155,7 @@ private fun ShowcaseSection() {
         AppTextField(
             value = textValue,
             onValueChange = { textValue = it },
-            label = "Enter Word *",
+            label = "Enter WordEntity *",
             placeholder = "e.g., Ephemeral",
             leadingIcon = Icons.Default.Info
         )

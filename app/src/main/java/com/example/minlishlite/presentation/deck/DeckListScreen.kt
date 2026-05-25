@@ -48,7 +48,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.minlishlite.domain.model.Deck
+import com.example.minlishlite.data.local.entity.DeckEntity
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.presentation.component.AppOutlinedButton
 import com.example.minlishlite.presentation.component.AppTextField
@@ -73,7 +73,7 @@ fun DeckListScreen(
     viewModel: DeckListViewModel = viewModel(factory = DeckListViewModel.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var deckToDelete by remember { mutableStateOf<Deck?>(null) }
+    var deckToDelete by remember { mutableStateOf<DeckEntity?>(null) }
     val tagScrollState = rememberScrollState()
     val emptyMessage by remember(state.searchQuery, state.selectedTag) {
         derivedStateOf {
@@ -142,7 +142,7 @@ fun DeckListScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Deck List or Empty State
+            // DeckEntity List or Empty State
             when {
                 state.isLoading -> {
                     LoadingState(modifier = Modifier.weight(1f))
@@ -267,7 +267,7 @@ fun TagChip(
 
 @Composable
 fun DeckCardItem(
-    deck: Deck,
+    deck: DeckEntity,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier

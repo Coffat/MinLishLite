@@ -132,7 +132,7 @@ fun AddEditWordScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Card 1: Word details spelling & lookup
+                // Card 1: WordEntity details spelling & lookup
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -150,7 +150,7 @@ fun AddEditWordScreen(
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
 
-                            // Word spelling input
+                            // WordEntity spelling input
                             AppTextField(
                                 value = state.word,
                                 onValueChange = { viewModel.onWordChange(it) },

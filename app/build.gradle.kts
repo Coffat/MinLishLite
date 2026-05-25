@@ -63,4 +63,7 @@ dependencies {
     debugImplementation(libs.okhttp.logging)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Testing
+    testImplementation(libs.junit)
 }

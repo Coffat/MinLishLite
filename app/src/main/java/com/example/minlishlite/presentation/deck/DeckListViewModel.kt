@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.Deck
-import com.example.minlishlite.domain.repository.DeckRepository
+import com.example.minlishlite.data.local.entity.DeckEntity
+import com.example.minlishlite.data.repository.DeckRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class DeckListUiState(
-    val decks: List<Deck> = emptyList(),
+    val decks: List<DeckEntity> = emptyList(),
     val allTags: List<String> = emptyList(),
     val searchQuery: String = "",
     val selectedTag: String? = null,

@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.Word
-import com.example.minlishlite.domain.repository.WordRepository
+import com.example.minlishlite.data.local.entity.WordEntity
+import com.example.minlishlite.data.repository.WordRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class WordDetailUiState(
-    val word: Word? = null,
+    val word: WordEntity? = null,
     val isLoading: Boolean = false,
     val error: String? = null
 )

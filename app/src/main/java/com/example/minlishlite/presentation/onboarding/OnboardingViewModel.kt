@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.User
-import com.example.minlishlite.domain.repository.UserRepository
+import com.example.minlishlite.data.local.entity.UserEntity
+import com.example.minlishlite.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,7 +63,7 @@ class OnboardingViewModel(
         if (_uiState.value.isSaving) return
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val guestUser = User(
+            val guestUser = UserEntity(
                 id = 1,
                 name = "Guest",
                 email = null,
@@ -82,7 +82,7 @@ class OnboardingViewModel(
         if (state.name.isBlank() || state.goal.isBlank() || state.isSaving) return
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val user = User(
+            val user = UserEntity(
                 id = 1,
                 name = state.name.trim(),
                 email = null,

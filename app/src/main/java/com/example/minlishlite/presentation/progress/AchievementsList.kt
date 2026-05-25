@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.minlishlite.domain.model.Achievement
+import com.example.minlishlite.data.model.Achievement
 import com.example.minlishlite.ui.theme.AccentGreen
 import com.example.minlishlite.ui.theme.BorderColor
 import com.example.minlishlite.ui.theme.MinLishLiteTheme

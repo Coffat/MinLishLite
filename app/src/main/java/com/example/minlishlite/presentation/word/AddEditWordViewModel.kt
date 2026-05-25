@@ -8,12 +8,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
 import com.example.minlishlite.core.result.NetworkException
 import com.example.minlishlite.core.result.WordNotFoundException
-import com.example.minlishlite.data.mapper.buildCombinedPronunciation
-import com.example.minlishlite.data.mapper.resolvePronunciationFields
-import com.example.minlishlite.data.mapper.sanitizePhoneticInput
-import com.example.minlishlite.domain.model.Word
-import com.example.minlishlite.domain.repository.DictionaryRepository
-import com.example.minlishlite.domain.repository.WordRepository
+import com.example.minlishlite.core.util.PronunciationHelper.buildCombinedPronunciation
+import com.example.minlishlite.core.util.PronunciationHelper.resolvePronunciationFields
+import com.example.minlishlite.core.util.PronunciationHelper.sanitizePhoneticInput
+import com.example.minlishlite.data.local.entity.WordEntity
+import com.example.minlishlite.data.repository.DictionaryRepository
+import com.example.minlishlite.data.repository.WordRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -284,7 +284,7 @@ class AddEditWordViewModel(
 
                 if (wordId == null) {
                     val resolvedDeckId = deckId ?: 0
-                    val newWord = Word(
+                    val newWord = WordEntity(
                         deckId = resolvedDeckId,
                         word = trimmedWord,
                         pronunciation = combinedPronunciation,
@@ -349,27 +349,18 @@ class AddEditWordViewModel(
         }
     }
 
-    private fun Word.toLookupPreview(): DictionaryLookupPreview {
-        val pronunciations = resolvePronunciationFields(
-            pronunciation = pronunciation,
-            pronunciationUk = pronunciationUk,
-            pronunciationUs = pronunciationUs,
-            pronunciationUkAudioUrl = pronunciationUkAudioUrl,
-            pronunciationUsAudioUrl = pronunciationUsAudioUrl,
-            pronunciationAudioUrl = pronunciationAudioUrl
-        )
-
+    private fun com.example.minlishlite.data.model.DictionaryResult.toLookupPreview(): DictionaryLookupPreview {
         return DictionaryLookupPreview(
-            pronunciationUk = pronunciations.ukText,
-            pronunciationUs = pronunciations.usText,
-            pronunciationUkAudioUrl = pronunciations.ukAudioUrl,
-            pronunciationUsAudioUrl = pronunciations.usAudioUrl,
+            pronunciationUk = pronunciationUk.orEmpty(),
+            pronunciationUs = pronunciationUs.orEmpty(),
+            pronunciationUkAudioUrl = pronunciationUkAudioUrl.orEmpty(),
+            pronunciationUsAudioUrl = pronunciationUsAudioUrl.orEmpty(),
             meaning = meaning,
-            description = description,
-            example = example,
-            collocation = collocation,
-            relatedWords = relatedWords,
-            note = note
+            description = definition,
+            example = example.orEmpty(),
+            collocation = "",
+            relatedWords = "",
+            note = partOfSpeech
         )
     }
 

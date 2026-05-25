@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.minlishlite.domain.usecase.ProgressCalculator
+import com.example.minlishlite.core.util.ProgressCalculator
 import com.example.minlishlite.ui.theme.BorderColor
 import com.example.minlishlite.ui.theme.MinLishLiteTheme
 import com.example.minlishlite.ui.theme.OnSurface

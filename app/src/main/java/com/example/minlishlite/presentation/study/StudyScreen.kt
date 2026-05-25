@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.minlishlite.domain.model.ReviewResult
+import com.example.minlishlite.data.model.ReviewResult
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.presentation.component.EmptyState
 import com.example.minlishlite.presentation.component.ErrorState

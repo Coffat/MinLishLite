@@ -141,7 +141,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = state.user?.name ?: "Guest User",
+                        text = state.user?.name ?: "Guest UserEntity",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurface

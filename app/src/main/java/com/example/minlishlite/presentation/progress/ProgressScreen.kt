@@ -21,10 +21,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.minlishlite.domain.model.Achievement
-import com.example.minlishlite.domain.model.DayActivity
-import com.example.minlishlite.domain.model.ProgressAnalytics
-import com.example.minlishlite.domain.usecase.ProgressCalculator
+import com.example.minlishlite.data.model.Achievement
+import com.example.minlishlite.data.model.DayActivity
+import com.example.minlishlite.data.model.ProgressAnalytics
+import com.example.minlishlite.core.util.ProgressCalculator
 import com.example.minlishlite.presentation.component.EmptyState
 import com.example.minlishlite.presentation.component.ErrorState
 import com.example.minlishlite.presentation.component.LoadingState

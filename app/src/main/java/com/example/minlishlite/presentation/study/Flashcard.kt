@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.minlishlite.domain.model.Word
+import com.example.minlishlite.data.local.entity.WordEntity
 import com.example.minlishlite.ui.theme.BorderColor
 import com.example.minlishlite.ui.theme.MinLishLiteTheme
 import com.example.minlishlite.ui.theme.OnSurface
@@ -40,7 +40,7 @@ private const val FLIP_DURATION_MS = 300
 
 @Composable
 fun Flashcard(
-    word: Word,
+    word: WordEntity,
     isFlipped: Boolean,
     onFlip: () -> Unit,
     modifier: Modifier = Modifier
@@ -174,7 +174,7 @@ private fun FlashcardBackField(
     }
 }
 
-private val previewWord = Word(
+private val previewWord = WordEntity(
     id = 1,
     deckId = 1,
     word = "abandon",

@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.domain.model.Deck
-import com.example.minlishlite.domain.repository.DeckRepository
+import com.example.minlishlite.data.local.entity.DeckEntity
+import com.example.minlishlite.data.repository.DeckRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,7 +93,7 @@ class AddEditDeckViewModel(
             }
 
             val now = System.currentTimeMillis()
-            val deck = Deck(
+            val deck = DeckEntity(
                 id = deckId ?: 0,
                 name = trimmedName,
                 description = state.description.trim(),

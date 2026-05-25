@@ -98,7 +98,7 @@ fun EmptyStatePreview() {
             title = "No Decks Yet",
             message = "Create your first vocabulary deck to start learning with flashcards and spaced repetition.",
             icon = Icons.Outlined.Inbox,
-            actionText = "Create Deck",
+            actionText = "Create DeckEntity",
             onActionClick = {}
         )
     }

@@ -6,10 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
-import com.example.minlishlite.core.notification.StudyReminderScheduler
-import com.example.minlishlite.domain.model.User
-import com.example.minlishlite.domain.repository.SettingsRepository
-import com.example.minlishlite.domain.repository.UserRepository
+import com.example.minlishlite.data.local.entity.UserEntity
+import com.example.minlishlite.data.repository.SettingsRepository
+import com.example.minlishlite.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val user: User? = null,
+    val user: UserEntity? = null,
     val newWordsPerDay: Int = 10,
     val reminderEnabled: Boolean = true,
     val reminderTime: String = "09:00",
@@ -29,8 +28,7 @@ data class SettingsUiState(
 
 class SettingsViewModel(
     private val userRepository: UserRepository,
-    private val settingsRepository: SettingsRepository,
-    private val studyReminderScheduler: StudyReminderScheduler
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -76,20 +74,12 @@ class SettingsViewModel(
     fun onReminderEnabledChange(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.saveReminderEnabled(enabled)
-            if (enabled) {
-                studyReminderScheduler.schedule(_uiState.value.reminderTime)
-            } else {
-                studyReminderScheduler.cancel()
-            }
         }
     }
 
     fun onReminderTimeChange(time: String) {
         viewModelScope.launch {
             settingsRepository.saveReminderTime(time)
-            if (_uiState.value.reminderEnabled) {
-                studyReminderScheduler.schedule(time)
-            }
         }
     }
 
@@ -122,7 +112,7 @@ class SettingsViewModel(
         if (state.editName.isBlank() || state.editGoal.isBlank()) return
 
         viewModelScope.launch {
-            val updatedUser = User(
+            val updatedUser = UserEntity(
                 id = 1,
                 name = state.editName.trim(),
                 email = state.user?.email,
@@ -142,8 +132,7 @@ class SettingsViewModel(
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MinLishApplication
                 SettingsViewModel(
                     userRepository = application.container.userRepository,
-                    settingsRepository = application.container.settingsRepository,
-                    studyReminderScheduler = application.container.studyReminderScheduler
+                    settingsRepository = application.container.settingsRepository
                 )
             }
         }

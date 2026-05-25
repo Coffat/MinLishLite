@@ -145,7 +145,7 @@ fun WordDetailScreen(
                             .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Word title & pronunciation card
+                        // WordEntity title & pronunciation card
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),

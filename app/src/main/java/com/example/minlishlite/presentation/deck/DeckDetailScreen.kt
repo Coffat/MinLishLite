@@ -52,8 +52,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.minlishlite.domain.model.Deck
-import com.example.minlishlite.domain.model.Word
+import com.example.minlishlite.data.local.entity.DeckEntity
+import com.example.minlishlite.data.local.entity.WordEntity
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.presentation.component.AppOutlinedButton
 import com.example.minlishlite.presentation.component.AppTextField
@@ -86,7 +86,7 @@ fun DeckDetailScreen(
     viewModel: DeckDetailViewModel = viewModel(factory = DeckDetailViewModel.provideFactory(deckId))
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var wordToDelete by remember { mutableStateOf<Word?>(null) }
+    var wordToDelete by remember { mutableStateOf<WordEntity?>(null) }
     val wordListEmptyMessage by remember(state.searchQuery, state.selectedFilter) {
         derivedStateOf {
             when {
@@ -243,7 +243,7 @@ fun DeckDetailScreen(
                                 }
                             }
 
-                            // Word List
+                            // WordEntity List
                             if (state.words.isEmpty()) {
                                 item {
                                     EmptyState(
@@ -382,7 +382,7 @@ fun FilterChipItem(
 
 @Composable
 fun WordItem(
-    word: Word,
+    word: WordEntity,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier

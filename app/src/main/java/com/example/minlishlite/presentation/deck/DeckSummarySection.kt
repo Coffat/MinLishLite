@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.minlishlite.domain.model.Deck
+import com.example.minlishlite.data.local.entity.DeckEntity
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.ui.theme.AccentGreen
 import com.example.minlishlite.ui.theme.AccentOrange
@@ -30,7 +30,7 @@ import com.example.minlishlite.ui.theme.PrimarySoft
 
 @Composable
 fun DeckSummarySection(
-    deck: Deck,
+    deck: DeckEntity,
     totalWordsCount: Int,
     dueWordsCount: Int,
     learnedWordsCount: Int,
