@@ -3,39 +3,46 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-  <!-- Left Handle -->
+  <!-- Stand Left (official Lucide trophy.svg) -->
   <path
       android:strokeColor="#FFFFD700"
       android:strokeWidth="2"
       android:strokeLineCap="round"
       android:strokeLineJoin="round"
-      android:pathData="M6,9H4.5A2.5,2.5 0,0 1,2 6.5v0A2.5,2.5 0,0 1,4.5 4H6"/>
-  <!-- Right Handle -->
+      android:pathData="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"/>
+  <!-- Stand Right (official Lucide trophy.svg) -->
   <path
       android:strokeColor="#FFFFD700"
       android:strokeWidth="2"
       android:strokeLineCap="round"
       android:strokeLineJoin="round"
-      android:pathData="M18,9h1.5A2.5,2.5 0,0 0,22 6.5v0A2.5,2.5 0,0 0,19.5 4H18"/>
-  <!-- Cup body -->
+      android:pathData="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"/>
+  <!-- Right Handle (official Lucide trophy.svg) -->
   <path
       android:strokeColor="#FFFFD700"
       android:strokeWidth="2"
       android:strokeLineCap="round"
       android:strokeLineJoin="round"
-      android:pathData="M6,2h12v7a6,6 0,0 1,-12 0V2z"/>
-  <!-- Stand -->
+      android:pathData="M18 9h1.5a1 1 0 0 0 0-5H18"/>
+  <!-- Base (official Lucide trophy.svg) -->
   <path
       android:strokeColor="#FFFFD700"
       android:strokeWidth="2"
       android:strokeLineCap="round"
       android:strokeLineJoin="round"
-      android:pathData="M12,15v5"/>
-  <!-- Base -->
+      android:pathData="M4 22h16"/>
+  <!-- Cup body (official Lucide trophy.svg) -->
   <path
       android:strokeColor="#FFFFD700"
       android:strokeWidth="2"
       android:strokeLineCap="round"
       android:strokeLineJoin="round"
-      android:pathData="M9,22h6"/>
+      android:pathData="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/>
+  <!-- Left Handle (official Lucide trophy.svg) -->
+  <path
+      android:strokeColor="#FFFFD700"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"
+      android:pathData="M6 9H4.5a1 1 0 0 1 0-5H6"/>
 </vector>
