@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
@@ -221,9 +222,13 @@ private fun ProgressContent(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = if (achievement.unlocked) "🏆" else "🔒",
-                                    fontSize = 20.sp
+                                androidx.compose.material3.Icon(
+                                    painter = androidx.compose.ui.res.painterResource(
+                                        id = if (achievement.unlocked) com.example.minlishlite.R.drawable.ic_trophy else com.example.minlishlite.R.drawable.ic_lock
+                                    ),
+                                    contentDescription = if (achievement.unlocked) "Đã mở khóa" else "Chưa mở khóa",
+                                    tint = if (achievement.unlocked) AccentGreen else OnSurfaceMuted,
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Column {
                                     Text(
