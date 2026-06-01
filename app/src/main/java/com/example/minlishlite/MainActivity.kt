@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.Composable
 import com.example.minlishlite.presentation.navigation.AppNavigation
 import com.example.minlishlite.ui.theme.MinLishLiteTheme
 
