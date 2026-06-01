@@ -11,6 +11,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE id = :id")
     fun observeUser(id: Int = 1): Flow<UserEntity?>
 
+    @Query("SELECT * FROM users WHERE id = :id")
+    suspend fun getUser(id: Int = 1): UserEntity?
+
     @Upsert
     suspend fun upsertUser(user: UserEntity)
 }

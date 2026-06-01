@@ -64,4 +64,7 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     debugImplementation(libs.okhttp.logging)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Google Auth
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 }
