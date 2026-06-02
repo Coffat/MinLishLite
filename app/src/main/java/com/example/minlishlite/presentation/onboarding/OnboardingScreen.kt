@@ -1,5 +1,8 @@
 package com.example.minlishlite.presentation.onboarding
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,20 +21,21 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.presentation.component.AppOutlinedButton
@@ -44,6 +48,9 @@ import com.example.minlishlite.ui.theme.OnSurfaceMuted
 import com.example.minlishlite.ui.theme.Primary
 import com.example.minlishlite.ui.theme.PrimarySoft
 import com.example.minlishlite.ui.theme.Surface
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun OnboardingScreen(
@@ -52,6 +59,38 @@ fun OnboardingScreen(
     viewModel: OnboardingViewModel = viewModel(factory = OnboardingViewModel.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Cấu hình Google Sign-In
+    val gso = remember {
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestProfile()
+            .build()
+    }
+    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+
+    // Xử lý kết quả trả về khi người dùng đăng nhập Google
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            // Lấy thông tin thành công
+            val name = account.displayName ?: "Người dùng MinLish"
+            val email = account.email ?: ""
+
+
+            viewModel.saveGoogleUser(name, email)
+
+
+            onNavigateToHome()
+        } catch (e: ApiException) {
+            Log.e("GoogleSignIn", "Đăng nhập thất bại mã lỗi: ${e.statusCode}", e)
+            // Có thể thêm Toast/Snackbar hiển thị lỗi ở đây nếu muốn
+        }
+    }
 
     // Redirect to Home if user profile already exists
     LaunchedEffect(state.userExists) {
@@ -123,9 +162,21 @@ fun OnboardingScreen(
                         .padding(bottom = 16.dp)
                 ) {
                     AppButton(
-                        text = "Bắt đầu thiết lập",
+                        text = "Tạo tài khoản thủ công",
                         onClick = { viewModel.onGetStartedClick() },
                         modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Nút Đăng nhập Google được chuyển ra ngoài màn hình chính để dễ tiếp cận
+                    AppOutlinedButton(
+                        text = "Đăng nhập bằng Google",
+                        onClick = {
+                            launcher.launch(googleSignInClient.signInIntent)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isSaving
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))

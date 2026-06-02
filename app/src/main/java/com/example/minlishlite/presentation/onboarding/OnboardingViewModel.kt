@@ -104,4 +104,25 @@ class OnboardingViewModel(
             }
         }
     }
+    //Save Google User
+    fun saveGoogleUser(name: String, email: String) {
+        viewModelScope.launch {
+            // Lấy thông tin user hiện tại (nếu có)
+            val currentUser = userRepository.getUser(1)
+
+            // Tạo hoặc cập nhật thông tin user
+            val updatedUser = UserEntity(
+                id = 1,
+                name = name,
+                email = email,
+                goal = currentUser?.goal ?: "IELTS",
+                level = currentUser?.level ?: "Beginner",
+                createdAt = currentUser?.createdAt ?: System.currentTimeMillis()
+            )
+
+            userRepository.saveUser(updatedUser)
+        }
+    }
+
+
 }

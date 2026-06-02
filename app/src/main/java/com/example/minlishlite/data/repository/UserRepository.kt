@@ -11,6 +11,10 @@ class UserRepository(
         return userDao.observeUser()
     }
 
+    suspend fun getUser(id: Int = 1): UserEntity? {
+        return userDao.getUser(id)
+    }
+
     suspend fun saveUser(user: UserEntity) {
         userDao.upsertUser(user)
     }

@@ -2,13 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.example.minlishlite"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.minlishlite"
@@ -34,6 +33,9 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    kotlinOptions {
+        jvmTarget = "11"
     }
 }
 
@@ -62,4 +64,7 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     debugImplementation(libs.okhttp.logging)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Google Auth
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 }
