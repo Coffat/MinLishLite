@@ -252,7 +252,7 @@ fun DeckDetailScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Xuất từ file CSV") },
+                                text = { Text("Xuất ra file CSV") },
                                 onClick = {
                                     isMenuExpanded = false
                                     exportLauncher.launch("minlish_deck_${deckId}.csv")

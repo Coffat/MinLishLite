@@ -1,0 +1,7 @@
+word,pronunciation,meaning,description,example,collocation,relatedWords,note,level
+valid_word_1,/pron1/,nghĩa hợp lệ 1,Mô tả 1,Ví dụ 1,Collocation 1,Từ liên quan 1,Ghi chú 1,B1
+
+invalid_word_no_meaning,/pron2/,,Mô tả 2,Ví dụ 2,,,Ghi chú 2,B2
+,/pron3/,nghĩa nhưng không có từ,Mô tả 3,Ví dụ 3,,,Ghi chú 3,B3
+,,,,,
+valid_word_2,/pron4/,nghĩa hợp lệ 2,Mô tả 4,Ví dụ 4,Collocation 4,Từ liên quan 4,Ghi chú 4,A2
