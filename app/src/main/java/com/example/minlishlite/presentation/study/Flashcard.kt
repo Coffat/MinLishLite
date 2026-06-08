@@ -9,18 +9,25 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontStyle
@@ -79,8 +86,7 @@ fun Flashcard(
         ) {
             if (showFront) {
                 FlashcardFront(
-                    word = word.word,
-                    pronunciation = word.pronunciation,
+                    word = word,
                     modifier = Modifier.graphicsLayer { rotationY = 0f }
                 )
             } else {
@@ -97,8 +103,7 @@ fun Flashcard(
 
 @Composable
 private fun FlashcardFront(
-    word: String,
-    pronunciation: String,
+    word: WordEntity,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -107,20 +112,52 @@ private fun FlashcardFront(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = word,
+            text = word.word,
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface,
             textAlign = TextAlign.Center
         )
-        if (pronunciation.isNotBlank()) {
-            Text(
-                text = pronunciation,
-                fontSize = 16.sp,
-                color = OnSurfaceMuted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 12.dp)
-            )
+
+        val showPronunciationRow: @Composable (String, String, String?) -> Unit = { label, text, audioUrl ->
+            if (text.isNotBlank()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 12.dp)
+                ) {
+                    val displayText = if (label.isNotBlank()) "$label $text" else text
+                    Text(
+                        text = displayText,
+                        fontSize = 16.sp,
+                        color = OnSurfaceMuted,
+                        textAlign = TextAlign.Center
+                    )
+                    if (!audioUrl.isNullOrBlank()) {
+                        val context = LocalContext.current
+                        IconButton(
+                            onClick = { 
+                                com.example.minlishlite.core.util.PronunciationAudioPlayer.play(context, audioUrl) 
+                            },
+                            modifier = Modifier.padding(start = 8.dp).size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VolumeUp,
+                                contentDescription = "Phát âm $label",
+                                tint = com.example.minlishlite.ui.theme.Primary
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (word.pronunciationUk.isNotBlank() || word.pronunciationUs.isNotBlank()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                showPronunciationRow("UK:", word.pronunciationUk, word.pronunciationUkAudioUrl)
+                showPronunciationRow("US:", word.pronunciationUs, word.pronunciationUsAudioUrl)
+            }
+        } else if (word.pronunciation.isNotBlank()) {
+            showPronunciationRow("", word.pronunciation, word.pronunciationAudioUrl)
         }
         Text(
             text = "Chạm để lật thẻ",

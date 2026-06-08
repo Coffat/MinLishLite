@@ -13,23 +13,31 @@ object SrsCalculator {
 
     const val DEFAULT_EASE_FACTOR = 2.5f
     private const val MIN_EASE_FACTOR = 1.3f
+    fun calculateNextReview(result: ReviewResult, now: Long, easeFactor: Float): Long {
+        // AGAIN = chưa nhớ → ôn lại ngay, không tính khoảng cách
+        if (result == ReviewResult.AGAIN) return now
 
-    fun calculateNextReview(result: ReviewResult, now: Long): Long {
-        return when (result) {
-            ReviewResult.AGAIN -> now
-            ReviewResult.HARD -> now + TimeUnit.DAYS.toMillis(1)
-            ReviewResult.GOOD -> now + TimeUnit.DAYS.toMillis(3)
-            ReviewResult.EASY -> now + TimeUnit.DAYS.toMillis(7)
+        // Số ngày cơ bản tùy mức đánh giá
+        val baseIntervalDays = when (result) {
+            ReviewResult.HARD -> 1
+            ReviewResult.GOOD -> 3
+            ReviewResult.EASY -> 7
+            ReviewResult.AGAIN -> 0 // đã xử lý ở trên
         }
+
+        // Nhân với easeFactor: từ dễ nhớ → khoảng cách ngày càng dài
+        val intervalMillis = (baseIntervalDays * easeFactor * TimeUnit.DAYS.toMillis(1)).toLong()
+        return now + intervalMillis
     }
 
     fun adjustEaseFactor(currentEaseFactor: Float, result: ReviewResult): Float {
         val adjusted = when (result) {
-            ReviewResult.AGAIN -> currentEaseFactor - 0.2f
-            ReviewResult.HARD -> currentEaseFactor - 0.1f
-            ReviewResult.GOOD -> currentEaseFactor
-            ReviewResult.EASY -> currentEaseFactor + 0.15f
+            ReviewResult.AGAIN -> currentEaseFactor - 0.2f  // khó → ôn thường xuyên hơn
+            ReviewResult.HARD  -> currentEaseFactor - 0.1f
+            ReviewResult.GOOD  -> currentEaseFactor          // giữ nguyên
+            ReviewResult.EASY  -> currentEaseFactor + 0.15f // dễ → ôn ít lại
         }
+        // Không để easeFactor xuống dưới 1.3 để tránh khoảng cách ôn quá ngắn
         return adjusted.coerceAtLeast(MIN_EASE_FACTOR)
     }
 
@@ -38,10 +46,10 @@ object SrsCalculator {
         result: ReviewResult,
         now: Long
     ): SrsReviewOutcome {
-        val easeFactor = adjustEaseFactor(currentEaseFactor, result)
+        val newEaseFactor = adjustEaseFactor(currentEaseFactor, result)
         return SrsReviewOutcome(
-            nextReviewAt = calculateNextReview(result, now),
-            easeFactor = easeFactor,
+            nextReviewAt = calculateNextReview(result, now, newEaseFactor),
+            easeFactor = newEaseFactor,
             isCorrect = result != ReviewResult.AGAIN
         )
     }

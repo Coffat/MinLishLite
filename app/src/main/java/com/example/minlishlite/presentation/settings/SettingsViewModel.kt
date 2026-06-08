@@ -1,11 +1,13 @@
 package com.example.minlishlite.presentation.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.minlishlite.MinLishApplication
+import com.example.minlishlite.core.worker.StudyReminderScheduler
 import com.example.minlishlite.data.local.entity.UserEntity
 import com.example.minlishlite.data.repository.SettingsRepository
 import com.example.minlishlite.data.repository.UserRepository
@@ -27,6 +29,7 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(
+    private val context: Context,
     private val userRepository: UserRepository,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
@@ -74,12 +77,24 @@ class SettingsViewModel(
     fun onReminderEnabledChange(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.saveReminderEnabled(enabled)
+            // Lên lịch hoặc hủy WorkManager tùy theo người dùng bật/tắt
+            if (enabled) {
+                val (hour, minute) = StudyReminderScheduler.parseTime(_uiState.value.reminderTime)
+                StudyReminderScheduler.schedule(context, hour, minute)
+            } else {
+                StudyReminderScheduler.cancel(context)
+            }
         }
     }
 
     fun onReminderTimeChange(time: String) {
         viewModelScope.launch {
             settingsRepository.saveReminderTime(time)
+            // Cập nhật lịch mới nếu nhắc đang bật
+            if (_uiState.value.reminderEnabled) {
+                val (hour, minute) = StudyReminderScheduler.parseTime(time)
+                StudyReminderScheduler.schedule(context, hour, minute)
+            }
         }
     }
 
@@ -125,12 +140,21 @@ class SettingsViewModel(
         }
     }
 
+    fun onLogout(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            userRepository.deleteUser(1)
+            onSuccess()
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MinLishApplication
                 SettingsViewModel(
+                    // Dùng applicationContext để tránh memory leak (không giữ Activity)
+                    context = application.applicationContext,
                     userRepository = application.container.userRepository,
                     settingsRepository = application.container.settingsRepository
                 )

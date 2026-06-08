@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -181,14 +182,46 @@ fun WordDetailScreen(
                                         }
                                     }
 
-                                    if (word.pronunciation.isNotEmpty()) {
+                                    val showPronunciationRow: @Composable (String, String, String?) -> Unit = { label, text, audioUrl ->
+                                        if (text.isNotBlank()) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                val displayText = if (label.isNotBlank()) "$label $text" else text
+                                                Text(
+                                                    text = displayText,
+                                                    fontSize = 16.sp,
+                                                    color = OnSurfaceMuted,
+                                                    fontStyle = FontStyle.Italic
+                                                )
+                                                if (!audioUrl.isNullOrBlank()) {
+                                                    val context = androidx.compose.ui.platform.LocalContext.current
+                                                    IconButton(
+                                                        onClick = { 
+                                                            com.example.minlishlite.core.util.PronunciationAudioPlayer.play(context, audioUrl) 
+                                                        },
+                                                        modifier = Modifier
+                                                            .size(24.dp)
+                                                            .padding(start = 8.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.VolumeUp,
+                                                            contentDescription = "Phát âm $label",
+                                                            tint = Primary
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (word.pronunciationUk.isNotBlank() || word.pronunciationUs.isNotBlank()) {
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = word.pronunciation,
-                                            fontSize = 16.sp,
-                                            color = OnSurfaceMuted,
-                                            fontStyle = FontStyle.Italic
-                                        )
+                                        Column {
+                                            showPronunciationRow("UK:", word.pronunciationUk, word.pronunciationUkAudioUrl)
+                                            showPronunciationRow("US:", word.pronunciationUs, word.pronunciationUsAudioUrl)
+                                        }
+                                    } else if (word.pronunciation.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        showPronunciationRow("", word.pronunciation, word.pronunciationAudioUrl)
                                     }
                                 }
                             }

@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.minlishlite.data.local.entity.WordEntity
 import com.example.minlishlite.data.model.ReviewResult
 import com.example.minlishlite.presentation.component.AppButton
 import com.example.minlishlite.presentation.component.EmptyState
@@ -54,7 +55,24 @@ fun StudyScreen(
     viewModel: StudyViewModel = viewModel(factory = StudyViewModel.provideFactory(studyMode))
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    StudyScreenContent(
+        state = state,
+        onBackClick = onBackClick,
+        onFlipCard = viewModel::onFlipCard,
+        onRateCard = viewModel::onRateCard,
+        modifier = modifier
+    )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun StudyScreenContent(
+    state: StudyUiState,
+    onBackClick: () -> Unit,
+    onFlipCard: () -> Unit,
+    onRateCard: (ReviewResult) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Background,
@@ -92,8 +110,8 @@ fun StudyScreen(
             )
             else -> StudyingContent(
                 state = state,
-                onFlipCard = viewModel::onFlipCard,
-                onRateCard = viewModel::onRateCard,
+                onFlipCard = onFlipCard,
+                onRateCard = onRateCard,
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -268,13 +286,81 @@ private fun SessionCompleteContent(
     }
 }
 
-@Preview(showBackground = true)
+private val previewStudyWord = WordEntity(
+    id = 1,
+    deckId = 1,
+    word = "abandon",
+    pronunciation = "/əˈbændən/",
+    meaning = "từ bỏ, bỏ rơi",
+    description = "",
+    example = "He abandoned his car in the snow.",
+    collocation = "abandon hope",
+    relatedWords = "",
+    note = "",
+    level = "B2",
+    nextReviewAt = 0L,
+    createdAt = 0L,
+    updatedAt = 0L
+)
+
+@Preview(showBackground = true, name = "Đang học")
 @Composable
-fun StudyScreenPreview() {
+private fun StudyScreenStudyingPreview() {
     MinLishLiteTheme {
-        StudyScreen(
-            studyMode = StudyMode.DeckDue(1),
-            onBackClick = {}
+        StudyScreenContent(
+            state = StudyUiState(
+                deckName = "IELTS Core",
+                currentWord = previewStudyWord,
+                currentIndex = 0,
+                totalCount = 5,
+                progressLabel = "1/5",
+                progressFraction = 0.2f,
+                isFlipped = false,
+                isLoading = false
+            ),
+            onBackClick = {},
+            onFlipCard = {},
+            onRateCard = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Đã lật thẻ")
+@Composable
+private fun StudyScreenFlippedPreview() {
+    MinLishLiteTheme {
+        StudyScreenContent(
+            state = StudyUiState(
+                deckName = "IELTS Core",
+                currentWord = previewStudyWord,
+                currentIndex = 2,
+                totalCount = 5,
+                progressLabel = "3/5",
+                progressFraction = 0.6f,
+                isFlipped = true,
+                isLoading = false
+            ),
+            onBackClick = {},
+            onFlipCard = {},
+            onRateCard = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Hoàn thành")
+@Composable
+private fun StudyScreenCompletePreview() {
+    MinLishLiteTheme {
+        StudyScreenContent(
+            state = StudyUiState(
+                deckName = "IELTS Core",
+                totalCount = 5,
+                isLoading = false,
+                isSessionComplete = true
+            ),
+            onBackClick = {},
+            onFlipCard = {},
+            onRateCard = {}
         )
     }
 }

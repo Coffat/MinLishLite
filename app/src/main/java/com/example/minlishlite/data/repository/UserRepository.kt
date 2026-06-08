@@ -18,4 +18,8 @@ class UserRepository(
     suspend fun saveUser(user: UserEntity) {
         userDao.upsertUser(user)
     }
+
+    suspend fun deleteUser(id: Int = 1) {
+        userDao.deleteUser(id)
+    }
 }

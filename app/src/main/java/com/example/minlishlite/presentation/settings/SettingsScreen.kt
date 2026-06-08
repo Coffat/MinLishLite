@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.minlishlite.presentation.component.AppButton
+import com.example.minlishlite.presentation.component.AppDestructiveButton
 import com.example.minlishlite.presentation.component.AppOutlinedButton
 import com.example.minlishlite.presentation.component.AppTextField
 import com.example.minlishlite.ui.theme.Background
@@ -67,6 +68,7 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
 ) {
@@ -357,6 +359,14 @@ fun SettingsScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        AppDestructiveButton(
+            text = "Đăng xuất",
+            onClick = { viewModel.onLogout(onLogout) },
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(modifier = Modifier.height(40.dp))
     }
 
@@ -466,6 +476,6 @@ fun SettingsScreen(
 @Composable
 fun SettingsScreenPreview() {
     MinLishLiteTheme {
-        SettingsScreen()
+        SettingsScreen(onLogout = {})
     }
 }
