@@ -49,7 +49,7 @@ class StudyReminderWorker(
             // Xây dựng nội dung notification
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Đến giờ ôn từ vựng rồi! 📚")
+                .setContentTitle("Đến giờ ôn từ vựng rồi! ")
                 .setContentText("Bạn có từ cần ôn hôm nay. Học vài phút để không quên nhé!")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
